@@ -3,12 +3,12 @@ import { useStore } from "../lib/store";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Textarea } from "./ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { Textarea } from "./ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import { CreditCard, Wallet, Banknote, CheckCircle } from "lucide-react";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 interface CheckoutProps {
   isOpen: boolean;

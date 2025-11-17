@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from './store';
 import { api } from './api';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export function useDataSync() {
   const [isLoading, setIsLoading] = useState(true);

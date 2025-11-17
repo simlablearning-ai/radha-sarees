@@ -1,25 +1,43 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useStore } from "./lib/store";
 import { useDataSync, syncedActions } from "./lib/useData";
-import Admin from "./Admin";
-import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
+import { ProductDetail } from "./components/ProductDetail";
+import { CategoryPage } from "./components/CategoryPage";
+import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
 import { Categories } from "./components/Categories";
 import { Features } from "./components/Features";
 import { ProductGrid } from "./components/ProductGrid";
-import { ProductDetail } from "./components/ProductDetail";
-import { CategoryPage } from "./components/CategoryPage";
-import { Cart, CartItem } from "./components/Cart";
+import { Cart } from "./components/Cart";
 import { Checkout } from "./components/Checkout";
-import { Footer } from "./components/Footer";
-import { Product } from "./components/ProductCard";
-import { Button } from "./components/ui/button";
+import { AdminPanel } from "./components/admin/AdminPanel";
 import { CustomerAuth } from "./components/CustomerAuth";
 import { CustomerDashboard } from "./components/CustomerDashboard";
-import { Settings, Loader2 } from "lucide-react";
-import { toast } from "sonner@2.0.3";
+import { Button } from "./components/ui/button";
+import { Settings } from "lucide-react";
+import { toast } from "sonner";
 
 type ViewType = 'store' | 'admin' | 'product' | 'category' | 'customer-dashboard';
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  category: string;
+  description?: string;
+  tags?: string[];
+  stock?: number;
+}
 
 export default function App() {
   const { products, isCustomerAuthenticated, currentCustomer } = useStore();
@@ -74,7 +92,7 @@ export default function App() {
 
   // If admin view, render admin panel
   if (view === 'admin') {
-    return <Admin />;
+    return <AdminPanel />;
   }
 
   // If customer dashboard view, render customer dashboard

@@ -1,12 +1,6 @@
-import { useState } from "react";
-import { ChevronLeft, Heart, Star, ShoppingCart, Truck, Shield, RotateCcw, Share2, Minus, Plus } from "lucide-react";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Product } from "./ProductCard";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 interface ProductDetailProps {
   product: Product;
