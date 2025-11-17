@@ -16,6 +16,9 @@
     "lucide-react": "^0.468.0",
     "sonner": "^2.0.3",
     "react-hook-form": "^7.55.0",
+    "motion": "^11.14.4",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.5",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-aspect-ratio": "^1.1.2",
@@ -54,6 +57,7 @@
   "devDependencies": {
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/node": "^22.10.2",
     "@vitejs/plugin-react": "^4.3.4",
     "vite": "^6.0.3",
     "tailwindcss": "^4.0.0"
