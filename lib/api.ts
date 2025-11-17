@@ -25,7 +25,7 @@ class APIClient {
     const token = this.getToken();
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token || publicAnonKey}`,
+      'Authorization': `Bearer ${publicAnonKey}`, // Always use publicAnonKey for now
       ...options.headers,
     };
 
