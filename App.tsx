@@ -61,8 +61,20 @@ export default function App() {
         setView('admin');
       } else if (hash === '#customer-dashboard') {
         setView('customer-dashboard');
+      } else if (hash.startsWith('#product/')) {
+        const productId = parseInt(hash.replace('#product/', ''));
+        if (!isNaN(productId)) {
+          setSelectedProductId(productId);
+          setView('product');
+        }
+      } else if (hash.startsWith('#category/')) {
+        const category = decodeURIComponent(hash.replace('#category/', ''));
+        setSelectedCategoryForPage(category);
+        setView('category');
       } else {
         setView('store');
+        setSelectedProductId(null);
+        setSelectedCategoryForPage(null);
       }
     };
 
@@ -150,22 +162,17 @@ export default function App() {
   };
 
   const handleCategoryPageSelect = (categoryName: string) => {
-    setSelectedCategoryForPage(categoryName);
-    setView('category');
+    window.location.hash = `#category/${encodeURIComponent(categoryName)}`;
     window.scrollTo(0, 0);
   };
 
   const handleProductClick = (productId: number) => {
-    setSelectedProductId(productId);
-    setView('product');
+    window.location.hash = `#product/${productId}`;
     window.scrollTo(0, 0);
   };
 
   const handleBackToHome = () => {
-    setView('store');
-    setSelectedProductId(null);
-    setSelectedCategoryForPage(null);
-    setSelectedCategory(null);
+    window.location.hash = '';
     window.scrollTo(0, 0);
   };
 

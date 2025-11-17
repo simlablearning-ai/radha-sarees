@@ -42,20 +42,24 @@ export function Header({ cartItems, onCartClick, onSearchChange, onAccountClick,
           <div className="flex items-center justify-between gap-6 h-16">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <h1 className="text-primary-foreground whitespace-nowrap">Radha Sarees</h1>
+              <a href="#" className="block">
+                <h1 className="text-primary-foreground whitespace-nowrap cursor-pointer hover:opacity-90 transition-opacity">Radha Sarees</h1>
+              </a>
             </div>
 
             {/* Navigation Menu - Desktop */}
             <nav className="hidden lg:flex items-center gap-6 flex-shrink-0">
               {categories.map((category) => (
-                <a
+                <button
                   key={category}
-                  href={`#${category.toLowerCase().replace(' ', '-')}`}
                   className="text-primary-foreground/90 hover:text-primary-foreground transition-colors whitespace-nowrap"
-                  onClick={() => onCategoryPageSelect && onCategoryPageSelect(category)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onCategoryPageSelect && onCategoryPageSelect(category);
+                  }}
                 >
                   {category}
-                </a>
+                </button>
               ))}
             </nav>
 
