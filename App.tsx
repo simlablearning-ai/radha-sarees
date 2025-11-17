@@ -11,7 +11,7 @@ import { Features } from "./components/Features";
 import { ProductGrid } from "./components/ProductGrid";
 import { Cart } from "./components/Cart";
 import { Checkout } from "./components/Checkout";
-import { AdminPanel } from "./components/admin/AdminPanel";
+import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { CustomerAuth } from "./components/CustomerAuth";
 import { CustomerDashboard } from "./components/CustomerDashboard";
 import { Button } from "./components/ui/button";
@@ -92,7 +92,7 @@ export default function App() {
 
   // If admin view, render admin panel
   if (view === 'admin') {
-    return <AdminPanel />;
+    return <AdminDashboard />;
   }
 
   // If customer dashboard view, render customer dashboard
