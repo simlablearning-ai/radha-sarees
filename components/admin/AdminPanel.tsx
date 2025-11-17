@@ -7,22 +7,25 @@ import { ProductManagement } from "./ProductManagement";
 import { OrderManagement } from "./OrderManagement";
 import { ReportManagement } from "./ReportManagement";
 import { SettingsManagement } from "./SettingsManagement";
-import { Button } from "../ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  FileText, 
-  Settings, 
+import { ImageManagement } from "./ImageManagement";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  FileText,
+  Settings,
+  Image,
+  ExternalLink,
   LogOut,
-  X
 } from "lucide-react";
+import { Button } from "../ui/button";
 import { toast } from "sonner";
+
+type AdminView = 'dashboard' | 'products' | 'orders' | 'images' | 'reports' | 'settings';
 
 export function AdminPanel() {
   const { isAdminAuthenticated, adminUsername } = useStore();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [currentView, setCurrentView] = useState<AdminView>('dashboard');
 
   const handleLogin = async (username: string, password: string) => {
     const success = await syncedActions.adminLogin(username, password);
@@ -35,102 +38,117 @@ export function AdminPanel() {
     }
   };
 
-  const handleLogout = () => {
-    syncedActions.adminLogout();
-    toast.success("Logged out successfully");
-  };
-
-  const handleClose = () => {
-    window.location.hash = '';
-  };
-
-  // Show login screen if not authenticated
+  // Show login if not authenticated
   if (!isAdminAuthenticated) {
     return <AdminLogin onLogin={handleLogin} />;
   }
 
-  // Show admin panel if authenticated
+  const menuItems = [
+    { id: 'dashboard' as AdminView, label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'products' as AdminView, label: 'Products', icon: Package },
+    { id: 'orders' as AdminView, label: 'Orders', icon: ShoppingCart },
+    { id: 'images' as AdminView, label: 'Images', icon: Image },
+    { id: 'reports' as AdminView, label: 'Reports', icon: FileText },
+    { id: 'settings' as AdminView, label: 'Settings', icon: Settings },
+  ];
+
+  const handleLogout = () => {
+    syncedActions.adminLogout();
+    toast.success("Logged out successfully");
+    window.location.hash = '';
+  };
+
+  const renderView = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return <AdminDashboard />;
+      case 'products':
+        return <ProductManagement />;
+      case 'orders':
+        return <OrderManagement />;
+      case 'images':
+        return <ImageManagement />;
+      case 'reports':
+        return <ReportManagement />;
+      case 'settings':
+        return <SettingsManagement />;
+      default:
+        return <AdminDashboard />;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <h1 className="text-foreground">Admin Panel</h1>
-              <span className="text-muted-foreground">
-                Welcome, {adminUsername}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="border-border"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClose}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-muted">
+      {/* Sidebar */}
+      <div className="fixed left-0 top-0 h-full w-64 bg-sidebar border-r border-sidebar-border">
+        <div className="p-6">
+          <h1 className="text-sidebar-foreground mb-2">Radha Sarees</h1>
+          <p className="text-sidebar-foreground opacity-70">Admin Panel</p>
         </div>
-      </header>
+
+        <nav className="px-3">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentView === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setCurrentView(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-md mb-1 transition-colors ${
+                  isActive
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+
+          <div className="mt-6 pt-6 border-t border-sidebar-border">
+            <a
+              href="#"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+            >
+              <ExternalLink className="h-5 w-5" />
+              <span>Visit Site</span>
+            </a>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-sidebar-border">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Logout</span>
+            </button>
+          </div>
+        </nav>
+      </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 mb-8 bg-muted">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <LayoutDashboard className="h-4 w-4" />
-              <span className="hidden sm:inline">Dashboard</span>
-            </TabsTrigger>
-            <TabsTrigger value="products" className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              <span className="hidden sm:inline">Products</span>
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4" />
-              <span className="hidden sm:inline">Orders</span>
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Reports</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">Settings</span>
-            </TabsTrigger>
-          </TabsList>
+      <div className="ml-64 min-h-screen">
+        <header className="bg-card border-b border-border sticky top-0 z-10">
+          <div className="px-8 py-4 flex items-center justify-between">
+            <h2 className="text-foreground">
+              {menuItems.find(item => item.id === currentView)?.label}
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.hash = ''}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              View Store
+            </Button>
+          </div>
+        </header>
 
-          <TabsContent value="dashboard">
-            <AdminDashboard />
-          </TabsContent>
-
-          <TabsContent value="products">
-            <ProductManagement />
-          </TabsContent>
-
-          <TabsContent value="orders">
-            <OrderManagement />
-          </TabsContent>
-
-          <TabsContent value="reports">
-            <ReportManagement />
-          </TabsContent>
-
-          <TabsContent value="settings">
-            <SettingsManagement />
-          </TabsContent>
-        </Tabs>
+        <main className="p-8">
+          {renderView()}
+        </main>
       </div>
     </div>
   );
