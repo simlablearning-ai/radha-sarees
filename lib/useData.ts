@@ -133,12 +133,13 @@ export const syncedActions = {
       const result = await api.addProduct(product);
       if (result.product) {
         useStore.getState().addProduct(result.product);
+        return true; // Return true on success
       }
-      return result;
+      return false;
     } catch (error) {
       console.error('Failed to add product:', error);
       toast.error('Failed to add product');
-      throw error;
+      return false; // Return false on error
     }
   },
 
@@ -392,11 +393,11 @@ export const syncedActions = {
       if (result.settings) {
         useStore.getState().updateSiteSettings(result.settings);
       }
-      return result;
+      return true; // Return true on success
     } catch (error) {
       console.error('Failed to update site settings:', error);
-      toast.error('Failed to update settings');
-      throw error;
+      toast.error(`Failed to update settings: ${error.message || 'Unknown error'}`);
+      return false; // Return false on error
     }
   },
 

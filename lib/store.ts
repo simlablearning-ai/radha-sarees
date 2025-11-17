@@ -288,8 +288,10 @@ export const useStore = create<StoreState>()(
       
       // Product actions
       addProduct: (product) => set((state) => {
-        const newId = Math.max(0, ...state.products.map(p => p.id)) + 1;
-        return { products: [...state.products, { ...product, id: newId }] };
+        // If product already has an ID (from backend), use it
+        // Otherwise generate a new one
+        const productId = product.id || (Math.max(0, ...state.products.map(p => p.id)) + 1);
+        return { products: [...state.products, { ...product, id: productId }] };
       }),
 
       updateProduct: (id, product) => set((state) => ({
