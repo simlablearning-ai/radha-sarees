@@ -71,7 +71,11 @@ export function ProductDetail({
     ? Math.round(((finalOriginalPrice - finalPrice) / finalOriginalPrice) * 100)
     : 0;
 
-  const images = [product.image, product.image, product.image, product.image]; // In real app, product would have multiple images
+  // Use variation-specific image if available, otherwise use product image
+  const mainImage = (currentVariation?.image && currentVariation.image.trim()) 
+    ? currentVariation.image 
+    : product.image;
+  const images = [mainImage, mainImage, mainImage, mainImage]; // In real app, product would have multiple images
 
   const handleQuantityChange = (delta: number) => {
     const newQuantity = quantity + delta;

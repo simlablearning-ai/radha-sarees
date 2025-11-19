@@ -247,17 +247,23 @@ export function ProductManagement() {
         headers.forEach((header, index) => {
           const value = values[index];
           
+          // Map CSV headers to correct product property names
+          let propertyName = header;
+          if (header === 'originalprice') propertyName = 'originalPrice';
+          if (header === 'instock') propertyName = 'inStock';
+          if (header === 'hasvariations') propertyName = 'hasVariations';
+          
           if (header === 'price' || header === 'originalprice' || header === 'stock' || header === 'rating' || header === 'reviews') {
-            product[header] = Number(value) || 0;
+            product[propertyName] = Number(value) || 0;
           } else if (header === 'instock' || header === 'hasvariations') {
-            product[header] = value.toLowerCase() === 'true' || value === '1';
+            product[propertyName] = value.toLowerCase() === 'true' || value === '1';
           } else if (header === 'tags') {
-            product[header] = value ? value.split(';').map(t => t.trim()) : [];
+            product[propertyName] = value ? value.split(';').map(t => t.trim()) : [];
           } else if (header === 'variations') {
             // Parse color variations: color:stock:priceAdjustment:imageURL|color:stock:priceAdjustment:imageURL
             if (value && value.trim()) {
               const variationStrings = value.split('|');
-              product[header] = variationStrings.map((varStr, idx) => {
+              product[propertyName] = variationStrings.map((varStr, idx) => {
                 const parts = varStr.split(':');
                 return {
                   id: `${Date.now()}-${idx}`,
@@ -268,10 +274,10 @@ export function ProductManagement() {
                 };
               }).filter(v => v.color); // Only include variations with a color name
             } else {
-              product[header] = [];
+              product[propertyName] = [];
             }
           } else {
-            product[header] = value || '';
+            product[propertyName] = value || '';
           }
         });
 
@@ -790,7 +796,6 @@ export function ProductManagement() {
                     <Switch
                       checked={formData.hasVariations}
                       onCheckedChange={(checked) => {
-                        setFormData({ ...formData, hasVariations: checked });
                         if (checked && formData.variations.length === 0) {
                           // Add first variation by default
                           setFormData({ 
@@ -804,6 +809,8 @@ export function ProductManagement() {
                               image: ''
                             }]
                           });
+                        } else {
+                          setFormData({ ...formData, hasVariations: checked });
                         }
                       }}
                     />
@@ -1342,7 +1349,6 @@ export function ProductManagement() {
                 <Switch
                   checked={formData.hasVariations}
                   onCheckedChange={(checked) => {
-                    setFormData({ ...formData, hasVariations: checked });
                     if (checked && formData.variations.length === 0) {
                       // Add first variation by default
                       setFormData({ 
@@ -1356,6 +1362,8 @@ export function ProductManagement() {
                           image: ''
                         }]
                       });
+                    } else {
+                      setFormData({ ...formData, hasVariations: checked });
                     }
                   }}
                 />
