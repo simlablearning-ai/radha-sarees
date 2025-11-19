@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "../lib/store";
 import { syncedActions } from "../lib/useData";
 import { Button } from "./ui/button";
@@ -48,13 +48,13 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Check if customer data is loaded
-  useState(() => {
+  useEffect(() => {
     // Give a small timeout to allow data to sync
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 500);
     return () => clearTimeout(timer);
-  });
+  }, []);
 
   // If still loading, show loading state
   if (isLoading) {
