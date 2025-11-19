@@ -16,6 +16,7 @@ import { CustomerAuth } from "./components/CustomerAuth";
 import { CustomerDashboard } from "./components/CustomerDashboard";
 import { Button } from "./components/ui/button";
 import { toast } from "sonner";
+import { Toaster } from "./components/ui/sonner";
 
 type ViewType = 'store' | 'admin' | 'product' | 'category' | 'customer-dashboard';
 
@@ -103,12 +104,22 @@ export default function App() {
 
   // If admin view, render admin panel
   if (view === 'admin') {
-    return <AdminPanel />;
+    return (
+      <>
+        <AdminPanel />
+        <Toaster />
+      </>
+    );
   }
 
   // If customer dashboard view, render customer dashboard
   if (view === 'customer-dashboard') {
-    return <CustomerDashboard onLogout={handleCustomerLogout} />;
+    return (
+      <>
+        <CustomerDashboard onLogout={handleCustomerLogout} />
+        <Toaster />
+      </>
+    );
   }
 
   const handleAddToCart = (product: Product) => {
@@ -287,6 +298,8 @@ export default function App() {
           items={cartItems}
           onCheckoutComplete={handleCheckoutComplete}
         />
+
+        <Toaster />
       </>
     );
   }
@@ -331,6 +344,8 @@ export default function App() {
           items={cartItems}
           onCheckoutComplete={handleCheckoutComplete}
         />
+
+        <Toaster />
       </>
     );
   }
@@ -395,6 +410,8 @@ export default function App() {
       >
         {isCustomerAuthenticated ? 'My Account' : 'Login/Signup'}
       </Button>
+
+      <Toaster />
     </div>
   );
 }
