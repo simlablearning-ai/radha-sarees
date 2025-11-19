@@ -787,33 +787,35 @@ export function ProductManagement() {
                 </div>
 
                 {/* Color Variations Section */}
-                <div className="border border-border rounded-lg p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Color Variations</Label>
+                <div className="border-2 border-primary/30 rounded-lg p-4 space-y-4 bg-primary/5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <Label className="text-lg">Color Variations</Label>
                       <p className="text-muted-foreground text-sm">Add multiple color options for this product</p>
                     </div>
-                    <Switch
-                      checked={formData.hasVariations}
-                      onCheckedChange={(checked) => {
-                        if (checked && formData.variations.length === 0) {
-                          // Add first variation by default
-                          setFormData({ 
-                            ...formData, 
-                            hasVariations: checked,
-                            variations: [{
-                              id: Date.now().toString(),
-                              color: '',
-                              stock: 0,
-                              priceAdjustment: 0,
-                              image: ''
-                            }]
-                          });
-                        } else {
-                          setFormData({ ...formData, hasVariations: checked });
-                        }
-                      }}
-                    />
+                    <div className="flex-shrink-0">
+                      <Switch
+                        checked={formData.hasVariations}
+                        onCheckedChange={(checked) => {
+                          if (checked && formData.variations.length === 0) {
+                            // Add first variation by default
+                            setFormData({ 
+                              ...formData, 
+                              hasVariations: checked,
+                              variations: [{
+                                id: Date.now().toString(),
+                                color: '',
+                                stock: 0,
+                                priceAdjustment: 0,
+                                image: ''
+                              }]
+                            });
+                          } else {
+                            setFormData({ ...formData, hasVariations: checked });
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
 
                   {formData.hasVariations && (
@@ -1340,33 +1342,35 @@ export function ProductManagement() {
             </div>
 
             {/* Color Variations Section */}
-            <div className="border border-border rounded-lg p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Color Variations</Label>
+            <div className="border-2 border-primary/30 rounded-lg p-4 space-y-4 bg-primary/5">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <Label className="text-lg">Color Variations</Label>
                   <p className="text-muted-foreground text-sm">Add multiple color options for this product</p>
                 </div>
-                <Switch
-                  checked={formData.hasVariations}
-                  onCheckedChange={(checked) => {
-                    if (checked && formData.variations.length === 0) {
-                      // Add first variation by default
-                      setFormData({ 
-                        ...formData, 
-                        hasVariations: checked,
-                        variations: [{
-                          id: Date.now().toString(),
-                          color: '',
-                          stock: 0,
-                          priceAdjustment: 0,
-                          image: ''
-                        }]
-                      });
-                    } else {
-                      setFormData({ ...formData, hasVariations: checked });
-                    }
-                  }}
-                />
+                <div className="flex-shrink-0">
+                  <Switch
+                    checked={formData.hasVariations}
+                    onCheckedChange={(checked) => {
+                      if (checked && formData.variations.length === 0) {
+                        // Add first variation by default
+                        setFormData({ 
+                          ...formData, 
+                          hasVariations: checked,
+                          variations: [{
+                            id: Date.now().toString(),
+                            color: '',
+                            stock: 0,
+                            priceAdjustment: 0,
+                            image: ''
+                          }]
+                        });
+                      } else {
+                        setFormData({ ...formData, hasVariations: checked });
+                      }
+                    }}
+                  />
+                </div>
               </div>
 
               {formData.hasVariations && (
