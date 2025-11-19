@@ -3,6 +3,27 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { api } from './api';
 
+export interface ProductVariation {
+  id: string;
+  color: string;
+  stock: number;
+  priceAdjustment?: number; // Optional price difference from base price
+  image?: string; // Optional variation-specific image
+}
+
+export interface ProductReview {
+  id: string;
+  productId: number;
+  customerName: string;
+  customerId?: string; // Optional: links to customer profile
+  rating: number; // 1-5
+  title: string;
+  comment: string;
+  isVerifiedPurchase: boolean;
+  createdAt: string;
+  isManualReview?: boolean; // Added by admin manually
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -19,6 +40,10 @@ export interface Product {
   categories: string[]; // New: Multiple categories
   tags: string[]; // New: Tags like "featured", "new-arrival", "bestseller"
   description?: string;
+  customerReviews?: ProductReview[]; // Customer reviews
+  totalSales?: number; // Random sales number for display
+  hasVariations?: boolean; // Whether product has color variations
+  variations?: ProductVariation[]; // Color variations with individual stock
 }
 
 export interface OrderItem {
@@ -27,6 +52,7 @@ export interface OrderItem {
   quantity: number;
   price: number;
   image: string;
+  selectedVariation?: { color: string }; // Selected color variation if product has variations
 }
 
 export interface Order {
@@ -82,6 +108,7 @@ export interface SiteSettings {
   featuredProductIds?: number[]; // Product IDs to feature on homepage
   heroImages?: HeroImage[]; // Images for hero section
   categoryImages?: CategoryImage[]; // Images for category section
+  heroShowCategories?: boolean; // Show/hide category boxes on hero section
 }
 
 export interface CustomerProfile {
@@ -175,6 +202,10 @@ interface StoreState {
   addBillingAddress: (address: Omit<CustomerBillingAddress, 'id'>) => void;
   updateBillingAddress: (id: string, address: Partial<CustomerBillingAddress>) => void;
   deleteBillingAddress: (id: string) => void;
+  
+  // Review actions
+  addReview: (review: Omit<ProductReview, 'id' | 'createdAt'>) => void;
+  deleteReview: (reviewId: string) => void;
 }
 
 export const useStore = create<StoreState>()(
@@ -192,11 +223,44 @@ export const useStore = create<StoreState>()(
           weight: "Pure Silk",
           isOrganic: false,
           inStock: true,
-          stock: 10, // Add stock field
+          stock: 10,
           category: "Wedding",
           categories: ["Wedding", "Silk"],
           tags: ["featured", "new-arrival"],
-          description: "Luxurious Banarasi silk saree with intricate zari work, perfect for weddings"
+          description: "Luxurious Banarasi silk saree with intricate zari work, perfect for weddings",
+          totalSales: 1247,
+          customerReviews: [
+            {
+              id: "RVW-1",
+              productId: 1,
+              customerName: "Priya Sharma",
+              rating: 5,
+              title: "Absolutely Stunning!",
+              comment: "The quality of this Banarasi silk is exceptional. The zari work is intricate and beautiful. Perfect for my wedding!",
+              isVerifiedPurchase: true,
+              createdAt: "2024-11-10T10:30:00Z"
+            },
+            {
+              id: "RVW-2",
+              productId: 1,
+              customerName: "Anjali Patel",
+              rating: 5,
+              title: "Worth Every Penny",
+              comment: "Gorgeous saree with excellent craftsmanship. The color is vibrant and true to the pictures. Highly recommended!",
+              isVerifiedPurchase: true,
+              createdAt: "2024-11-08T14:20:00Z"
+            },
+            {
+              id: "RVW-3",
+              productId: 1,
+              customerName: "Meera Reddy",
+              rating: 4,
+              title: "Beautiful but Heavy",
+              comment: "The saree is absolutely beautiful and the quality is top-notch. Only downside is it's quite heavy to wear for long hours.",
+              isVerifiedPurchase: true,
+              createdAt: "2024-11-05T09:15:00Z"
+            }
+          ]
         },
         {
           id: 2,
@@ -209,11 +273,12 @@ export const useStore = create<StoreState>()(
           weight: "Pure Kanjivaram Silk",
           isOrganic: false,
           inStock: true,
-          stock: 5, // Add stock field
+          stock: 5,
           category: "Wedding",
           categories: ["Wedding", "Silk"],
           tags: ["bestseller"],
-          description: "Authentic Kanjeevaram silk with rich golden border and traditional motifs"
+          description: "Authentic Kanjeevaram silk with rich golden border and traditional motifs",
+          totalSales: 892
         },
         {
           id: 3,
@@ -226,11 +291,12 @@ export const useStore = create<StoreState>()(
           weight: "Georgette with Embroidery",
           isOrganic: false,
           inStock: true,
-          stock: 8, // Add stock field
+          stock: 8,
           category: "Wedding",
           categories: ["Wedding", "Embroidery"],
           tags: ["new-arrival"],
-          description: "Contemporary designer saree with exquisite embroidery work"
+          description: "Contemporary designer saree with exquisite embroidery work",
+          totalSales: 1534
         },
         {
           id: 4,
@@ -243,11 +309,12 @@ export const useStore = create<StoreState>()(
           weight: "Pure Silk",
           isOrganic: false,
           inStock: true,
-          stock: 15, // Add stock field
+          stock: 15,
           category: "Ethnic",
           categories: ["Ethnic", "Silk"],
           tags: ["featured"],
-          description: "Classic silk saree for traditional occasions and festivities"
+          description: "Classic silk saree for traditional occasions and festivities",
+          totalSales: 2156
         },
         {
           id: 5,
@@ -260,11 +327,56 @@ export const useStore = create<StoreState>()(
           weight: "Cotton Blend",
           isOrganic: true,
           inStock: true,
-          stock: 20, // Add stock field
+          stock: 20,
           category: "Casuals",
           categories: ["Casuals", "Cotton"],
           tags: ["new-arrival"],
-          description: "Comfortable cotton saree perfect for everyday wear"
+          description: "Comfortable cotton saree perfect for everyday wear",
+          totalSales: 3421
+        },
+        {
+          id: 6,
+          name: "Premium Silk Saree - Multi Color Collection",
+          price: 12999,
+          originalPrice: 17999,
+          image: "/images/silk-multicolor.jpg",
+          rating: 4.8,
+          reviews: 156,
+          weight: "Pure Silk",
+          isOrganic: false,
+          inStock: true,
+          category: "Wedding",
+          categories: ["Wedding", "Silk"],
+          tags: ["featured", "bestseller"],
+          description: "Elegant silk saree available in multiple stunning colors. Perfect for weddings and special occasions.",
+          totalSales: 987,
+          hasVariations: true,
+          variations: [
+            {
+              id: "VAR-1",
+              color: "Royal Blue",
+              stock: 8,
+              priceAdjustment: 0
+            },
+            {
+              id: "VAR-2",
+              color: "Maroon Red",
+              stock: 12,
+              priceAdjustment: 0
+            },
+            {
+              id: "VAR-3",
+              color: "Emerald Green",
+              stock: 5,
+              priceAdjustment: 0
+            },
+            {
+              id: "VAR-4",
+              color: "Golden Yellow",
+              stock: 10,
+              priceAdjustment: 500 // ₹500 more for this color
+            }
+          ]
         },
       ],
       orders: [],
@@ -277,7 +389,8 @@ export const useStore = create<StoreState>()(
         heroAnimation: 'float',
         heroBackgroundOpacity: 0.5,
         heroOverlayOpacity: 0.3,
-        heroOverlayColor: '#000000'
+        heroOverlayColor: '#000000',
+        heroShowCategories: true // Default to showing categories
       },
       
       // Authentication
@@ -473,6 +586,27 @@ export const useStore = create<StoreState>()(
 
       deleteBillingAddress: (id) => set((state) => ({
         customerBillingAddresses: state.customerBillingAddresses.filter(a => a.id !== id)
+      })),
+      
+      // Review actions
+      addReview: (review) => set((state) => {
+        const newReview: ProductReview = {
+          ...review,
+          id: `RVW-${Date.now()}`,
+          createdAt: new Date().toISOString(),
+        };
+        return {
+          products: state.products.map(p =>
+            p.id === review.productId ? { ...p, customerReviews: [...(p.customerReviews || []), newReview] } : p
+          )
+        };
+      }),
+
+      deleteReview: (reviewId) => set((state) => ({
+        products: state.products.map(p => ({
+          ...p,
+          customerReviews: p.customerReviews?.filter(r => r.id !== reviewId)
+        }))
       })),
     }),
     {

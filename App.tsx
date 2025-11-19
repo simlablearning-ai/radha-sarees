@@ -398,6 +398,16 @@ export default function App() {
   if (view === 'product' && selectedProduct) {
     return (
       <>
+        <Header
+          cartItems={totalCartItems}
+          onCartClick={() => setIsCartOpen(true)}
+          onSearchChange={setSearchQuery}
+          onAccountClick={handleAccountClick}
+          customerName={currentCustomer?.name}
+          onCategoryPageSelect={handleCategoryPageSelect}
+          onWishlistClick={handleWishlistClick}
+        />
+        
         <ProductDetail
           product={selectedProduct}
           onBack={handleBackToHome}
@@ -407,6 +417,8 @@ export default function App() {
           relatedProducts={relatedProducts}
           onProductClick={handleProductClick}
         />
+        
+        <Footer />
         
         <Cart
           isOpen={isCartOpen}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Product } from "./ProductCard";
+import { ProductReviews } from "./ProductReviews";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -40,9 +41,34 @@ export function ProductDetail({
 }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedVariation, setSelectedVariation] = useState<string | null>(
+    product.hasVariations && product.variations && product.variations.length > 0 
+      ? product.variations[0].id 
+      : null
+  );
 
-  const discount = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  // Get current variation details
+  const currentVariation = product.hasVariations && selectedVariation
+    ? product.variations?.find(v => v.id === selectedVariation)
+    : null;
+
+  // Calculate final price based on variation
+  const finalPrice = product.price + (currentVariation?.priceAdjustment || 0);
+  const finalOriginalPrice = product.originalPrice 
+    ? product.originalPrice + (currentVariation?.priceAdjustment || 0)
+    : undefined;
+
+  // Calculate availability based on variation
+  const isAvailable = product.hasVariations
+    ? (currentVariation?.stock || 0) > 0
+    : product.inStock;
+
+  const currentStock = product.hasVariations
+    ? currentVariation?.stock || 0
+    : product.stock || 0;
+
+  const discount = finalOriginalPrice
+    ? Math.round(((finalOriginalPrice - finalPrice) / finalOriginalPrice) * 100)
     : 0;
 
   const images = [product.image, product.image, product.image, product.image]; // In real app, product would have multiple images
@@ -177,16 +203,64 @@ export function ProductDetail({
 
             <Separator />
 
+            {/* Color Variations */}
+            {product.hasVariations && product.variations && product.variations.length > 0 && (
+              <>
+                <div className="space-y-3">
+                  <label className="text-foreground">
+                    Select Color: {currentVariation && (
+                      <span className="text-primary">{currentVariation.color}</span>
+                    )}
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    {product.variations.map((variation) => {
+                      const isSelected = selectedVariation === variation.id;
+                      const isOutOfStock = variation.stock === 0;
+                      return (
+                        <button
+                          key={variation.id}
+                          onClick={() => !isOutOfStock && setSelectedVariation(variation.id)}
+                          disabled={isOutOfStock}
+                          className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                            isSelected
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : isOutOfStock
+                              ? 'border-border bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+                              : 'border-border bg-card text-foreground hover:border-primary/50'
+                          }`}
+                        >
+                          <div className="text-sm">
+                            <div>{variation.color}</div>
+                            {variation.priceAdjustment && variation.priceAdjustment !== 0 && (
+                              <div className="text-xs mt-1">
+                                {variation.priceAdjustment > 0 ? '+' : ''}
+                                ₹{variation.priceAdjustment}
+                              </div>
+                            )}
+                            {isOutOfStock && (
+                              <div className="text-xs mt-1">Out of Stock</div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <Separator />
+              </>
+            )}
+
             {/* Price */}
             <div className="space-y-2">
               <div className="flex items-baseline gap-3">
                 <span className="text-primary" style={{ fontSize: "var(--text-3xl)", fontWeight: "var(--font-weight-bold)" }}>
-                  ₹{product.price.toLocaleString("en-IN")}
+                  ₹{finalPrice.toLocaleString("en-IN")}
                 </span>
-                {product.originalPrice && (
+                {finalOriginalPrice && (
                   <>
                     <span className="text-muted-foreground line-through">
-                      ₹{product.originalPrice.toLocaleString("en-IN")}
+                      ₹{finalOriginalPrice.toLocaleString("en-IN")}
                     </span>
                     <Badge variant="secondary" className="bg-secondary text-secondary-foreground">
                       Save {discount}%
@@ -202,15 +276,17 @@ export function ProductDetail({
             {/* Product Details */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-foreground">Weight:</span>
-                <span className="text-muted-foreground">{product.weight}</span>
-              </div>
-              <div className="flex items-center justify-between">
                 <span className="text-foreground">Availability:</span>
-                <Badge className={product.inStock ? "bg-chart-3 text-white" : "bg-muted text-muted-foreground"}>
-                  {product.inStock ? "In Stock" : "Out of Stock"}
+                <Badge className={isAvailable ? "bg-chart-3 text-white" : "bg-muted text-muted-foreground"}>
+                  {isAvailable ? "In Stock" : "Out of Stock"}
                 </Badge>
               </div>
+              {currentStock !== undefined && (
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground">Stock:</span>
+                  <span className="text-muted-foreground">{currentStock} units available</span>
+                </div>
+              )}
             </div>
 
             <Separator />
@@ -250,7 +326,7 @@ export function ProductDetail({
                 size="lg"
                 className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
                 onClick={handleAddToCart}
-                disabled={!product.inStock}
+                disabled={!isAvailable}
               >
                 <ShoppingCart className="h-5 w-5 mr-2" />
                 Add to Cart
@@ -316,10 +392,15 @@ export function ProductDetail({
             <div className="space-y-3 pt-4">
               <h3 className="text-foreground">Product Description</h3>
               <p className="text-muted-foreground leading-relaxed">
-                {product.description || `Experience the elegance of ${product.name}. This exquisite saree is crafted with premium quality fabric and features intricate designs that celebrate India's rich textile heritage. Perfect for ${product.category.toLowerCase()} occasions, this saree combines traditional artistry with contemporary appeal. The ${product.weight} fabric ensures comfortable draping while maintaining a luxurious look.`}
+                {product.description || `Experience the elegance of ${product.name}. This exquisite saree is crafted with premium quality fabric and features intricate designs that celebrate India's rich textile heritage. Perfect for ${product.category.toLowerCase()} occasions, this saree combines traditional artistry with contemporary appeal. The beautiful draping ensures a comfortable and luxurious look.`}
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Customer Reviews Section */}
+        <div className="mt-16">
+          <ProductReviews productId={product.id} productName={product.name} />
         </div>
 
         {/* Related Products */}

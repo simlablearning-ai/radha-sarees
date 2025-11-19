@@ -3,6 +3,7 @@ import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import * as kv from "./kv_store.tsx";
+import * as notifications from "./notifications.tsx";
 
 const app = new Hono();
 
@@ -317,6 +318,20 @@ app.post("/make-server-226dc7f7/orders", async (c) => {
     
     await kv.set(`order:${id}`, order);
     
+    // Send order placed notification
+    try {
+      if (order.customerPhone && order.customerName) {
+        await notifications.sendOrderPlacedNotification(
+          order,
+          order.customerPhone,
+          order.customerName
+        );
+      }
+    } catch (notifError) {
+      console.log('Notification error (non-fatal):', notifError);
+      // Don't fail the order creation if notification fails
+    }
+    
     return c.json({ success: true, order });
   } catch (error) {
     console.log('Create order error:', error);
@@ -341,6 +356,22 @@ app.put("/make-server-226dc7f7/orders/:id", async (c) => {
       updatedAt: new Date().toISOString() 
     };
     await kv.set(`order:${id}`, updated);
+    
+    // Send status change notification if status has changed
+    try {
+      if (updates.status && updates.status !== existing.status && updated.customerPhone && updated.customerName) {
+        const statusType = updates.status.toLowerCase().replace(' ', '');
+        await notifications.sendOrderStatusNotification(
+          updated,
+          updated.customerPhone,
+          updated.customerName,
+          updates.status
+        );
+      }
+    } catch (notifError) {
+      console.log('Notification error (non-fatal):', notifError);
+      // Don't fail the order update if notification fails
+    }
     
     return c.json({ success: true, order: updated });
   } catch (error) {
@@ -574,14 +605,14 @@ app.delete("/make-server-226dc7f7/customer/billing-addresses/:id", async (c) => 
   }
 });
 
-// ==================== SETTINGS & REPORTS ====================
+// ==================== SETTINGS ====================
 
 // Get payment gateways
 app.get("/make-server-226dc7f7/settings/payment-gateways", async (c) => {
   try {
-    const gateways = await kv.get('settings:payment-gateways') || [
-      { id: 'razorpay', name: 'Razorpay', enabled: false },
-      { id: 'phonepe', name: 'PhonePe', enabled: false },
+    const gateways = await kv.get('settings:payment_gateways') || [
+      { id: 'razorpay', name: 'Razorpay', enabled: false, apiKey: '', secretKey: '' },
+      { id: 'phonepe', name: 'PhonePe', enabled: false, apiKey: '', secretKey: '' },
     ];
     return c.json({ gateways });
   } catch (error) {
@@ -596,12 +627,18 @@ app.put("/make-server-226dc7f7/settings/payment-gateways/:id", async (c) => {
     const id = c.req.param('id');
     const updates = await c.req.json();
     
-    const gateways = await kv.get('settings:payment-gateways') || [];
-    const updated = gateways.map(g => g.id === id ? { ...g, ...updates } : g);
+    const existing = await kv.get('settings:payment_gateways') || [
+      { id: 'razorpay', name: 'Razorpay', enabled: false, apiKey: '', secretKey: '' },
+      { id: 'phonepe', name: 'PhonePe', enabled: false, apiKey: '', secretKey: '' },
+    ];
     
-    await kv.set('settings:payment-gateways', updated);
+    const updatedGateways = existing.map((g: any) => 
+      g.id === id ? { ...g, ...updates } : g
+    );
     
-    return c.json({ success: true, gateways: updated });
+    await kv.set('settings:payment_gateways', updatedGateways);
+    
+    return c.json({ success: true, gateways: updatedGateways });
   } catch (error) {
     console.log('Update payment gateway error:', error);
     return c.json({ error: 'Internal server error' }, 500);
@@ -612,10 +649,11 @@ app.put("/make-server-226dc7f7/settings/payment-gateways/:id", async (c) => {
 app.get("/make-server-226dc7f7/settings/site", async (c) => {
   try {
     const settings = await kv.get('settings:site') || {
-      heroAnimation: 'float',
-      heroBackgroundOpacity: 0.5,
-      heroOverlayOpacity: 0.3,
-      heroOverlayColor: '#000000'
+      storeName: 'Radha Sarees',
+      storeLogo: '',
+      primaryColor: '#75074f',
+      secondaryColor: '#C41E3A',
+      accentColor: '#FFD700',
     };
     return c.json({ settings });
   } catch (error) {
@@ -703,6 +741,132 @@ app.put("/make-server-226dc7f7/settings/shipping", async (c) => {
     return c.json({ error: 'Internal server error' }, 500);
   }
 });
+
+// ==================== NOTIFICATIONS ====================
+
+// Get notification settings
+app.get("/make-server-226dc7f7/settings/notifications", async (c) => {
+  try {
+    const settings = await kv.get('notification_settings') || {
+      smsEnabled: false,
+      whatsappEnabled: false,
+      provider: 'twilio',
+      apiKey: '',
+      apiSecret: '',
+      senderId: '',
+      webhookUrl: '',
+      adminPhone: '+91 98765 43210',
+      notifyOnNewOrder: true,
+      notifyOnStatusChange: true,
+      notifyAdminOnOrder: true,
+      orderPlacedTemplate: 'Hi {customerName}, your order #{orderId} for ₹{amount} has been placed successfully! We will notify you once it ships.',
+      orderShippedTemplate: 'Hi {customerName}, your order #{orderId} has been shipped! Track your order: {trackingUrl}',
+      orderDeliveredTemplate: 'Hi {customerName}, your order #{orderId} has been delivered. Thank you for shopping with {storeName}!',
+      orderCancelledTemplate: 'Hi {customerName}, your order #{orderId} has been cancelled. Refund will be processed within 5-7 business days.',
+      adminOrderTemplate: 'New Order Alert! Order #{orderId} - ₹{amount} from {customerName} ({customerPhone})',
+    };
+    return c.json({ settings });
+  } catch (error) {
+    console.log('Get notification settings error:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+// Update notification settings
+app.put("/make-server-226dc7f7/settings/notifications", async (c) => {
+  try {
+    const updates = await c.req.json();
+    const existing = await kv.get('notification_settings') || {};
+    
+    const updated = { ...existing, ...updates };
+    await kv.set('notification_settings', updated);
+    
+    return c.json({ success: true, settings: updated });
+  } catch (error) {
+    console.log('Update notification settings error:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+// Test notification
+app.post("/make-server-226dc7f7/notifications/test", async (c) => {
+  try {
+    const { phone, settings } = await c.req.json();
+    
+    if (!phone) {
+      return c.json({ error: 'Phone number is required' }, 400);
+    }
+
+    const message = `Test notification from Radha Sarees! This is a test message to verify your SMS/WhatsApp configuration. Timestamp: ${new Date().toISOString()}`;
+    
+    const smsSuccess = settings.smsEnabled 
+      ? await notifications.sendNotification(phone, message, settings, 'sms')
+      : false;
+    
+    const whatsappSuccess = settings.whatsappEnabled 
+      ? await notifications.sendNotification(phone, message, settings, 'whatsapp')
+      : false;
+
+    if (smsSuccess || whatsappSuccess) {
+      return c.json({ 
+        success: true, 
+        message: 'Test notification sent successfully',
+        smsSuccess,
+        whatsappSuccess 
+      });
+    } else {
+      return c.json({ 
+        error: 'Failed to send test notification. Please check your settings and credentials.' 
+      }, 500);
+    }
+  } catch (error) {
+    console.log('Test notification error:', error);
+    return c.json({ error: `Test notification failed: ${error.message}` }, 500);
+  }
+});
+
+// Send order notification
+app.post("/make-server-226dc7f7/notifications/order", async (c) => {
+  try {
+    const { orderId, phone, type } = await c.req.json();
+    
+    if (!orderId || !phone || !type) {
+      return c.json({ error: 'Missing required fields' }, 400);
+    }
+
+    const order = await kv.get(`order:${orderId}`);
+    if (!order) {
+      return c.json({ error: 'Order not found' }, 404);
+    }
+
+    const customerName = order.customerName || 'Customer';
+    
+    if (type === 'placed') {
+      await notifications.sendOrderPlacedNotification(order, phone, customerName);
+    } else if (['shipped', 'delivered', 'cancelled'].includes(type)) {
+      const statusMap = {
+        'shipped': 'Shipped',
+        'delivered': 'Delivered',
+        'cancelled': 'Cancelled'
+      };
+      await notifications.sendOrderStatusNotification(
+        order, 
+        phone, 
+        customerName, 
+        statusMap[type]
+      );
+    } else {
+      return c.json({ error: 'Invalid notification type' }, 400);
+    }
+
+    return c.json({ success: true, message: 'Notification sent successfully' });
+  } catch (error) {
+    console.log('Send order notification error:', error);
+    return c.json({ error: `Failed to send notification: ${error.message}` }, 500);
+  }
+});
+
+// ==================== REPORTS ====================
 
 // Generate report
 app.post("/make-server-226dc7f7/reports", async (c) => {

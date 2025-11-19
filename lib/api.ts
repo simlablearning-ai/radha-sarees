@@ -264,6 +264,31 @@ class APIClient {
     });
   }
 
+  async getNotificationSettings() {
+    return this.request('/settings/notifications');
+  }
+
+  async updateNotificationSettings(settings: any) {
+    return this.request('/settings/notifications', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    });
+  }
+
+  async testNotification(phone: string, settings: any) {
+    return this.request('/notifications/test', {
+      method: 'POST',
+      body: JSON.stringify({ phone, settings }),
+    });
+  }
+
+  async sendOrderNotification(orderId: string, phone: string, type: string) {
+    return this.request('/notifications/order', {
+      method: 'POST',
+      body: JSON.stringify({ orderId, phone, type }),
+    });
+  }
+
   async generateReport(report: any) {
     return this.request('/reports', {
       method: 'POST',

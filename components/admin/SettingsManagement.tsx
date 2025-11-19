@@ -7,9 +7,17 @@ import { Label } from "../ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Switch } from "../ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { CreditCard, Save } from "lucide-react";
+import { CreditCard, Save, MessageSquare, Send } from "lucide-react";
 import { toast } from "sonner";
 import { SiteSettings } from "./SiteSettings";
+import { Textarea } from "../ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 export function SettingsManagement() {
   const { paymentGateways, updatePaymentGateway } = useStore();
@@ -39,6 +47,30 @@ export function SettingsManagement() {
     standardShippingCharge: 0,
     estimatedDeliveryTime: '5-7 business days',
   });
+
+  const [notificationSettings, setNotificationSettings] = useState({
+    smsEnabled: false,
+    whatsappEnabled: false,
+    provider: 'twilio', // twilio, msg91, textlocal, custom
+    apiKey: '',
+    apiSecret: '',
+    senderId: '',
+    webhookUrl: '',
+    adminPhone: '+91 98765 43210',
+    // Notification toggles
+    notifyOnNewOrder: true,
+    notifyOnStatusChange: true,
+    notifyAdminOnOrder: true,
+    // Message templates
+    orderPlacedTemplate: 'Hi {customerName}, your order #{orderId} for ₹{amount} has been placed successfully! We will notify you once it ships.',
+    orderShippedTemplate: 'Hi {customerName}, your order #{orderId} has been shipped! Track your order: {trackingUrl}',
+    orderDeliveredTemplate: 'Hi {customerName}, your order #{orderId} has been delivered. Thank you for shopping with {storeName}!',
+    orderCancelledTemplate: 'Hi {customerName}, your order #{orderId} has been cancelled. Refund will be processed within 5-7 business days.',
+    adminOrderTemplate: 'New Order Alert! Order #{orderId} - ₹{amount} from {customerName} ({customerPhone})',
+  });
+
+  const [testPhone, setTestPhone] = useState('');
+  const [isTesting, setIsTesting] = useState(false);
 
   const handleSaveRazorpay = () => {
     updatePaymentGateway('razorpay', {
@@ -78,6 +110,29 @@ export function SettingsManagement() {
     }
   };
 
+  const handleSaveNotificationSettings = async () => {
+    try {
+      await api.updateNotificationSettings(notificationSettings);
+      toast.success("Notification settings saved successfully!");
+    } catch (error) {
+      console.error('Error saving notification settings:', error);
+      toast.error("Failed to save notification settings");
+    }
+  };
+
+  const handleTestNotification = async () => {
+    setIsTesting(true);
+    try {
+      await api.testNotification(testPhone, notificationSettings);
+      toast.success("Test notification sent successfully!");
+    } catch (error) {
+      console.error('Error sending test notification:', error);
+      toast.error("Failed to send test notification");
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="site" className="w-full">
@@ -86,6 +141,7 @@ export function SettingsManagement() {
           <TabsTrigger value="payment">Payment Gateways</TabsTrigger>
           <TabsTrigger value="store">Store Settings</TabsTrigger>
           <TabsTrigger value="shipping">Shipping</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
 
         <TabsContent value="site" className="space-y-6">
@@ -384,6 +440,278 @@ export function SettingsManagement() {
               <Button onClick={handleSaveShippingSettings} className="w-full">
                 <Save className="h-4 w-4 mr-2" />
                 Save Shipping Settings
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                SMS & WhatsApp Notifications
+              </CardTitle>
+              <CardDescription>
+                Configure SMS and WhatsApp notifications for orders and status updates
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Provider Selection Guides */}
+              <div className="p-4 rounded-lg bg-muted border border-border space-y-3">
+                <p className="text-foreground">
+                  <strong>Supported Providers:</strong>
+                </p>
+                <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                  <li>
+                    <strong>Twilio:</strong> Enterprise-grade SMS & WhatsApp API (Global)
+                    <br />
+                    <a 
+                      href="https://www.twilio.com/docs/sms" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline ml-6"
+                    >
+                      Get API credentials →
+                    </a>
+                  </li>
+                  <li>
+                    <strong>MSG91:</strong> Popular Indian SMS provider with competitive rates
+                    <br />
+                    <a 
+                      href="https://msg91.com/help/MSG91/how-to-get-msg91-authkey" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline ml-6"
+                    >
+                      Get API credentials →
+                    </a>
+                  </li>
+                  <li>
+                    <strong>Textlocal:</strong> Affordable Indian SMS gateway
+                    <br />
+                    <a 
+                      href="https://www.textlocal.in/api-keys/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline ml-6"
+                    >
+                      Get API credentials →
+                    </a>
+                  </li>
+                  <li>
+                    <strong>Custom:</strong> Use your own webhook endpoint
+                  </li>
+                </ul>
+              </div>
+
+              {/* Enable Toggles */}
+              <div className="flex items-center justify-between p-4 rounded-lg bg-card border border-border">
+                <div>
+                  <Label className="text-foreground">SMS Notifications</Label>
+                  <p className="text-muted-foreground">
+                    Send SMS to customers and admin
+                  </p>
+                </div>
+                <Switch
+                  checked={notificationSettings.smsEnabled}
+                  onCheckedChange={(checked) =>
+                    setNotificationSettings({ ...notificationSettings, smsEnabled: checked })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg bg-card border border-border">
+                <div>
+                  <Label className="text-foreground">WhatsApp Notifications</Label>
+                  <p className="text-muted-foreground">
+                    Send WhatsApp messages (requires Twilio Business API)
+                  </p>
+                </div>
+                <Switch
+                  checked={notificationSettings.whatsappEnabled}
+                  onCheckedChange={(checked) =>
+                    setNotificationSettings({ ...notificationSettings, whatsappEnabled: checked })
+                  }
+                />
+              </div>
+
+              {/* Provider Configuration */}
+              <div className="space-y-4">
+                <Label className="text-foreground">Provider</Label>
+                <Select
+                  value={notificationSettings.provider}
+                  onValueChange={(value) =>
+                    setNotificationSettings({ ...notificationSettings, provider: value })
+                  }
+                >
+                  <SelectTrigger className="bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="twilio">Twilio</SelectItem>
+                    <SelectItem value="msg91">MSG91</SelectItem>
+                    <SelectItem value="textlocal">Textlocal</SelectItem>
+                    <SelectItem value="custom">Custom Webhook</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>API Key</Label>
+                <Input
+                  type="text"
+                  placeholder="API Key"
+                  value={notificationSettings.apiKey}
+                  onChange={(e) =>
+                    setNotificationSettings({ ...notificationSettings, apiKey: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <Label>API Secret</Label>
+                <Input
+                  type="password"
+                  placeholder="API Secret"
+                  value={notificationSettings.apiSecret}
+                  onChange={(e) =>
+                    setNotificationSettings({ ...notificationSettings, apiSecret: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Sender ID</Label>
+                <Input
+                  type="text"
+                  placeholder="Sender ID"
+                  value={notificationSettings.senderId}
+                  onChange={(e) =>
+                    setNotificationSettings({ ...notificationSettings, senderId: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Webhook URL</Label>
+                <Input
+                  type="text"
+                  placeholder="Webhook URL"
+                  value={notificationSettings.webhookUrl}
+                  onChange={(e) =>
+                    setNotificationSettings({ ...notificationSettings, webhookUrl: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Admin Phone</Label>
+                <Input
+                  type="tel"
+                  placeholder="Admin Phone"
+                  value={notificationSettings.adminPhone}
+                  onChange={(e) =>
+                    setNotificationSettings({ ...notificationSettings, adminPhone: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Notifications</Label>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={notificationSettings.notifyOnNewOrder}
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings({ ...notificationSettings, notifyOnNewOrder: checked })
+                    }
+                  />
+                  <Label>Notify on New Order</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={notificationSettings.notifyOnStatusChange}
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings({ ...notificationSettings, notifyOnStatusChange: checked })
+                    }
+                  />
+                  <Label>Notify on Status Change</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={notificationSettings.notifyAdminOnOrder}
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings({ ...notificationSettings, notifyAdminOnOrder: checked })
+                    }
+                  />
+                  <Label>Notify Admin on Order</Label>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Message Templates</Label>
+                <div>
+                  <Label>Order Placed Template</Label>
+                  <Textarea
+                    value={notificationSettings.orderPlacedTemplate}
+                    onChange={(e) =>
+                      setNotificationSettings({ ...notificationSettings, orderPlacedTemplate: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Order Shipped Template</Label>
+                  <Textarea
+                    value={notificationSettings.orderShippedTemplate}
+                    onChange={(e) =>
+                      setNotificationSettings({ ...notificationSettings, orderShippedTemplate: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Order Delivered Template</Label>
+                  <Textarea
+                    value={notificationSettings.orderDeliveredTemplate}
+                    onChange={(e) =>
+                      setNotificationSettings({ ...notificationSettings, orderDeliveredTemplate: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Order Cancelled Template</Label>
+                  <Textarea
+                    value={notificationSettings.orderCancelledTemplate}
+                    onChange={(e) =>
+                      setNotificationSettings({ ...notificationSettings, orderCancelledTemplate: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Admin Order Template</Label>
+                  <Textarea
+                    value={notificationSettings.adminOrderTemplate}
+                    onChange={(e) =>
+                      setNotificationSettings({ ...notificationSettings, adminOrderTemplate: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Test Notification</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="tel"
+                    placeholder="Test Phone Number"
+                    value={testPhone}
+                    onChange={(e) => setTestPhone(e.target.value)}
+                  />
+                  <Button
+                    onClick={handleTestNotification}
+                    disabled={isTesting}
+                    className="w-full"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {isTesting ? 'Sending...' : 'Send Test Notification'}
+                  </Button>
+                </div>
+              </div>
+              <Button onClick={handleSaveNotificationSettings} className="w-full">
+                <Save className="h-4 w-4 mr-2" />
+                Save Notification Settings
               </Button>
             </CardContent>
           </Card>

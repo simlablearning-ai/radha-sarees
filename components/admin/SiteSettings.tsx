@@ -6,7 +6,8 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
 import { Slider } from "../ui/slider";
-import { Sparkles, Palette, Save, RotateCcw } from "lucide-react";
+import { Switch } from "../ui/switch";
+import { Sparkles, Palette, Save, RotateCcw, Layout } from "lucide-react";
 import { toast } from "sonner";
 
 export function SiteSettings() {
@@ -27,6 +28,11 @@ export function SiteSettings() {
   const [heroOverlayColor, setHeroOverlayColor] = useState(
     siteSettings.heroOverlayColor || '#000000'
   );
+  
+  // Hero Category Display
+  const [heroShowCategories, setHeroShowCategories] = useState(
+    siteSettings.heroShowCategories ?? true
+  );
 
   const animations = [
     { value: 'float', label: 'Float', description: 'Gentle floating motion' },
@@ -41,6 +47,7 @@ export function SiteSettings() {
       heroBackgroundOpacity: heroBackgroundOpacity / 100,
       heroOverlayOpacity: heroOverlayOpacity / 100,
       heroOverlayColor,
+      heroShowCategories,
     });
 
     if (success) {
@@ -55,12 +62,14 @@ export function SiteSettings() {
     setHeroBackgroundOpacity(50);
     setHeroOverlayOpacity(30);
     setHeroOverlayColor('#000000');
+    setHeroShowCategories(true);
 
     const success = await syncedActions.updateSiteSettings({
       heroAnimation: 'float',
       heroBackgroundOpacity: 0.5,
       heroOverlayOpacity: 0.3,
       heroOverlayColor: '#000000',
+      heroShowCategories: true,
     });
 
     if (success) {
@@ -324,6 +333,66 @@ export function SiteSettings() {
                 Burgundy 30% - On Brand
               </div>
             </button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Hero Category Display */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Layout className="h-5 w-5 text-primary" />
+            Hero Layout
+          </CardTitle>
+          <CardDescription>
+            Control the display of category boxes on the right side of the hero section
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
+            <div className="flex-1">
+              <Label className="text-foreground mb-1">Show Category Boxes</Label>
+              <p className="text-sm text-muted-foreground">
+                Display 4 category image boxes on the right side of the hero section. When disabled, the hero title will be centered.
+              </p>
+            </div>
+            <Switch
+              checked={heroShowCategories}
+              onCheckedChange={(checked) => setHeroShowCategories(checked)}
+              className="ml-4"
+            />
+          </div>
+          
+          {/* Preview */}
+          <div className="space-y-2">
+            <Label>Layout Preview</Label>
+            <div className="relative h-40 rounded-lg overflow-hidden border border-border bg-gradient-to-br from-primary/5 via-background to-secondary/10">
+              <div className="absolute inset-0 p-6">
+                <div className={`grid grid-cols-1 ${heroShowCategories ? 'md:grid-cols-2' : ''} gap-4 h-full items-center`}>
+                  {/* Title */}
+                  <div className={heroShowCategories ? 'text-left' : 'text-center col-span-1'}>
+                    <div className="h-6 w-48 bg-foreground/20 rounded mb-2 mx-auto" style={{ marginLeft: heroShowCategories ? '0' : 'auto', marginRight: heroShowCategories ? 'initial' : 'auto' }}></div>
+                    <div className="h-6 w-32 bg-foreground/20 rounded mx-auto" style={{ marginLeft: heroShowCategories ? '0' : 'auto', marginRight: heroShowCategories ? 'initial' : 'auto' }}></div>
+                  </div>
+                  
+                  {/* Category Boxes */}
+                  {heroShowCategories && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="h-12 bg-card border border-border rounded"></div>
+                      <div className="h-12 bg-card border border-border rounded"></div>
+                      <div className="h-12 bg-card border border-border rounded"></div>
+                      <div className="h-12 bg-card border border-border rounded"></div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {heroShowCategories 
+                ? 'Categories are shown on the right with left-aligned title' 
+                : 'Title is centered with full width'
+              }
+            </p>
           </div>
         </CardContent>
       </Card>

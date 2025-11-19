@@ -8,6 +8,7 @@ import { OrderManagement } from "./OrderManagement";
 import { ReportManagement } from "./ReportManagement";
 import { SettingsManagement } from "./SettingsManagement";
 import { ImageManagement } from "./ImageManagement";
+import { ReviewManagement } from "./ReviewManagement";
 import {
   LayoutDashboard,
   Package,
@@ -17,11 +18,12 @@ import {
   Image,
   ExternalLink,
   LogOut,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 
-type AdminView = 'dashboard' | 'products' | 'orders' | 'images' | 'reports' | 'settings';
+type AdminView = 'dashboard' | 'products' | 'orders' | 'images' | 'reviews' | 'reports' | 'settings';
 
 export function AdminPanel() {
   const { isAdminAuthenticated, adminUsername } = useStore();
@@ -48,6 +50,7 @@ export function AdminPanel() {
     { id: 'products' as AdminView, label: 'Products', icon: Package },
     { id: 'orders' as AdminView, label: 'Orders', icon: ShoppingCart },
     { id: 'images' as AdminView, label: 'Images', icon: Image },
+    { id: 'reviews' as AdminView, label: 'Reviews', icon: MessageSquare },
     { id: 'reports' as AdminView, label: 'Reports', icon: FileText },
     { id: 'settings' as AdminView, label: 'Settings', icon: Settings },
   ];
@@ -68,6 +71,8 @@ export function AdminPanel() {
         return <OrderManagement />;
       case 'images':
         return <ImageManagement />;
+      case 'reviews':
+        return <ReviewManagement />;
       case 'reports':
         return <ReportManagement />;
       case 'settings':

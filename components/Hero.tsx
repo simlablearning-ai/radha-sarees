@@ -9,6 +9,7 @@ export function Hero() {
   const overlayOpacity = siteSettings.heroOverlayOpacity || 0.3;
   const overlayColor = siteSettings.heroOverlayColor || '#000000';
   const customBackgroundImage = siteSettings.customBackgroundImage;
+  const showCategories = siteSettings.heroShowCategories ?? true; // Default to true if not set
 
   // Get hero images from settings or use defaults
   const heroImages = siteSettings.heroImages || [
@@ -118,9 +119,9 @@ export function Hero() {
       <div className="absolute bottom-20 left-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
       
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left Panel - Tagline Only */}
-          <div className="text-left">
+        <div className={`grid grid-cols-1 ${showCategories ? 'lg:grid-cols-2' : ''} gap-12 items-center`}>
+          {/* Left Panel - Tagline */}
+          <div className={showCategories ? 'text-left' : 'text-center'}>
             <h1 
               className="text-white drop-shadow-lg"
               style={{
@@ -136,74 +137,76 @@ export function Hero() {
             </h1>
           </div>
           
-          {/* Right Panel - 4 Box Images */}
-          <div className="relative">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <motion.div
-                  className="bg-card rounded-lg overflow-hidden border border-border shadow-sm hover:shadow-md transition-shadow"
-                  style={{ borderRadius: 'var(--radius)' }}
-                  {...getAnimationVariants(0)}
-                >
-                  <ImageWithFallback
-                    src={heroImages[0].url}
-                    alt="Wedding Saree"
-                    className="w-full h-64 object-cover"
-                  />
-                  <div className="p-3">
-                    <p className="text-foreground">{heroImages[0].title}</p>
-                  </div>
-                </motion.div>
+          {/* Right Panel - 4 Box Images (Conditional) */}
+          {showCategories && (
+            <div className="relative">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <motion.div
+                    className="bg-card rounded-lg overflow-hidden border border-border shadow-sm hover:shadow-md transition-shadow"
+                    style={{ borderRadius: 'var(--radius)' }}
+                    {...getAnimationVariants(0)}
+                  >
+                    <ImageWithFallback
+                      src={heroImages[0].url}
+                      alt="Wedding Saree"
+                      className="w-full h-64 object-cover"
+                    />
+                    <div className="p-3">
+                      <p className="text-foreground">{heroImages[0].title}</p>
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div
+                    className="bg-card rounded-lg overflow-hidden border border-border shadow-sm hover:shadow-md transition-shadow"
+                    style={{ borderRadius: 'var(--radius)' }}
+                    {...getAnimationVariants(1)}
+                  >
+                    <ImageWithFallback
+                      src={heroImages[1].url}
+                      alt="Silk Saree"
+                      className="w-full h-64 object-cover"
+                    />
+                    <div className="p-3">
+                      <p className="text-foreground">{heroImages[1].title}</p>
+                    </div>
+                  </motion.div>
+                </div>
                 
-                <motion.div
-                  className="bg-card rounded-lg overflow-hidden border border-border shadow-sm hover:shadow-md transition-shadow"
-                  style={{ borderRadius: 'var(--radius)' }}
-                  {...getAnimationVariants(1)}
-                >
-                  <ImageWithFallback
-                    src={heroImages[1].url}
-                    alt="Silk Saree"
-                    className="w-full h-64 object-cover"
-                  />
-                  <div className="p-3">
-                    <p className="text-foreground">{heroImages[1].title}</p>
-                  </div>
-                </motion.div>
-              </div>
-              
-              <div className="space-y-4 mt-8">
-                <motion.div
-                  className="bg-card rounded-lg overflow-hidden border border-border shadow-sm hover:shadow-md transition-shadow"
-                  style={{ borderRadius: 'var(--radius)' }}
-                  {...getAnimationVariants(2)}
-                >
-                  <ImageWithFallback
-                    src={heroImages[2].url}
-                    alt="Designer Saree"
-                    className="w-full h-64 object-cover"
-                  />
-                  <div className="p-3">
-                    <p className="text-foreground">{heroImages[2].title}</p>
-                  </div>
-                </motion.div>
-                
-                <motion.div
-                  className="bg-card rounded-lg overflow-hidden border border-border shadow-sm hover:shadow-md transition-shadow"
-                  style={{ borderRadius: 'var(--radius)' }}
-                  {...getAnimationVariants(3)}
-                >
-                  <ImageWithFallback
-                    src={heroImages[3].url}
-                    alt="Festival Saree"
-                    className="w-full h-64 object-cover"
-                  />
-                  <div className="p-3">
-                    <p className="text-foreground">{heroImages[3].title}</p>
-                  </div>
-                </motion.div>
+                <div className="space-y-4 mt-8">
+                  <motion.div
+                    className="bg-card rounded-lg overflow-hidden border border-border shadow-sm hover:shadow-md transition-shadow"
+                    style={{ borderRadius: 'var(--radius)' }}
+                    {...getAnimationVariants(2)}
+                  >
+                    <ImageWithFallback
+                      src={heroImages[2].url}
+                      alt="Designer Saree"
+                      className="w-full h-64 object-cover"
+                    />
+                    <div className="p-3">
+                      <p className="text-foreground">{heroImages[2].title}</p>
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div
+                    className="bg-card rounded-lg overflow-hidden border border-border shadow-sm hover:shadow-md transition-shadow"
+                    style={{ borderRadius: 'var(--radius)' }}
+                    {...getAnimationVariants(3)}
+                  >
+                    <ImageWithFallback
+                      src={heroImages[3].url}
+                      alt="Festival Saree"
+                      className="w-full h-64 object-cover"
+                    />
+                    <div className="p-3">
+                      <p className="text-foreground">{heroImages[3].title}</p>
+                    </div>
+                  </motion.div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>
