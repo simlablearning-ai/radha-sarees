@@ -103,25 +103,18 @@ export default function App() {
 
   const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  // If admin view, render admin panel
-  if (view === 'admin') {
-    return (
-      <>
-        <AdminPanel />
-        <Toaster />
-      </>
-    );
-  }
-
-  // If customer dashboard view, render customer dashboard
-  if (view === 'customer-dashboard') {
-    return (
-      <>
-        <CustomerDashboard onLogout={handleCustomerLogout} />
-        <Toaster />
-      </>
-    );
-  }
+  // Define handler functions before they are used
+  const handleCustomerLogout = () => {
+    // Clear session from localStorage
+    localStorage.removeItem('supabase_session');
+    
+    // Clear from local store
+    syncedActions.customerLogout();
+    
+    toast.success("Logged out successfully");
+    window.history.pushState({}, '', '/');
+    setView('store');
+  };
 
   const handleAddToCart = (product: Product) => {
     setCartItems(prev => {
@@ -252,17 +245,25 @@ export default function App() {
     }
   };
 
-  const handleCustomerLogout = () => {
-    // Clear session from localStorage
-    localStorage.removeItem('supabase_session');
-    
-    // Clear from local store
-    syncedActions.customerLogout();
-    
-    toast.success("Logged out successfully");
-    window.history.pushState({}, '', '/');
-    setView('store');
-  };
+  // If admin view, render admin panel
+  if (view === 'admin') {
+    return (
+      <>
+        <AdminPanel />
+        <Toaster />
+      </>
+    );
+  }
+
+  // If customer dashboard view, render customer dashboard
+  if (view === 'customer-dashboard') {
+    return (
+      <>
+        <CustomerDashboard onLogout={handleCustomerLogout} />
+        <Toaster />
+      </>
+    );
+  }
 
   // Get selected product
   const selectedProduct = selectedProductId ? products.find(p => p.id === selectedProductId) : null;
