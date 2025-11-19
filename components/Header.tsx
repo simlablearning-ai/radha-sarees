@@ -10,9 +10,10 @@ interface HeaderProps {
   onAccountClick?: () => void;
   customerName?: string | null;
   onCategoryPageSelect?: (categoryName: string) => void;
+  onWishlistClick?: () => void;
 }
 
-export function Header({ cartItems, onCartClick, onSearchChange, onAccountClick, customerName, onCategoryPageSelect }: HeaderProps) {
+export function Header({ cartItems, onCartClick, onSearchChange, onAccountClick, customerName, onCategoryPageSelect, onWishlistClick }: HeaderProps) {
   const categories = ["Wedding", "Ethnic", "Casuals", "Festival", "New Arrivals", "Celebrity"];
 
   return (
@@ -22,13 +23,13 @@ export function Header({ cartItems, onCartClick, onSearchChange, onAccountClick,
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-10">
             <div className="flex items-center gap-4">
-              <p className="text-foreground/80">Free Shipping on Orders Above ₹2,999</p>
+              <p className="text-foreground/80" style={{ fontSize: 'var(--text-sm)' }}>Free Shipping on Orders Above ₹2,999</p>
             </div>
             <div className="flex items-center gap-4">
-              <button className="text-foreground/70 hover:text-foreground transition-colors">
+              <button className="text-foreground/70 hover:text-foreground transition-colors" style={{ fontSize: 'var(--text-sm)' }}>
                 Track Order
               </button>
-              <button className="text-foreground/70 hover:text-foreground transition-colors">
+              <button className="text-foreground/70 hover:text-foreground transition-colors" style={{ fontSize: 'var(--text-sm)' }}>
                 Help
               </button>
             </div>
@@ -43,7 +44,15 @@ export function Header({ cartItems, onCartClick, onSearchChange, onAccountClick,
             {/* Logo */}
             <div className="flex-shrink-0">
               <a href="#" className="block">
-                <h1 className="text-primary-foreground whitespace-nowrap cursor-pointer hover:opacity-90 transition-opacity">Radha Sarees</h1>
+                <h1 
+                  className="text-primary-foreground whitespace-nowrap cursor-pointer hover:opacity-90 transition-opacity"
+                  style={{ 
+                    fontFamily: 'var(--font-family-inter)',
+                    fontSize: 'var(--text-2xl)'
+                  }}
+                >
+                  Radha Sarees
+                </h1>
               </a>
             </div>
 
@@ -53,6 +62,7 @@ export function Header({ cartItems, onCartClick, onSearchChange, onAccountClick,
                 <button
                   key={category}
                   className="text-primary-foreground/90 hover:text-primary-foreground transition-colors whitespace-nowrap"
+                  style={{ fontSize: 'var(--text-sm)' }}
                   onClick={(e) => {
                     e.preventDefault();
                     onCategoryPageSelect && onCategoryPageSelect(category);
@@ -71,7 +81,20 @@ export function Header({ cartItems, onCartClick, onSearchChange, onAccountClick,
                   type="text"
                   placeholder="Search for sarees..."
                   className="pl-10 bg-background/95 border-border/50 focus:border-primary-foreground h-9"
-                  onChange={(e) => onSearchChange(e.target.value)}
+                  style={{ fontSize: 'var(--text-sm)' }}
+                  onChange={(e) => {
+                    onSearchChange(e.target.value);
+                    if (e.target.value.trim()) {
+                      window.history.pushState({}, '', '/search');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                      window.history.pushState({}, '', '/search');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -85,13 +108,16 @@ export function Header({ cartItems, onCartClick, onSearchChange, onAccountClick,
                 onClick={onAccountClick}
               >
                 <User className="h-5 w-5" />
-                <span className="hidden xl:inline">{customerName ? customerName : "Account"}</span>
+                <span className="hidden xl:inline" style={{ fontSize: 'var(--text-sm)' }}>
+                  {customerName ? customerName : "Account"}
+                </span>
               </Button>
               
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                onClick={onWishlistClick}
               >
                 <Heart className="h-5 w-5" />
               </Button>
@@ -99,25 +125,15 @@ export function Header({ cartItems, onCartClick, onSearchChange, onAccountClick,
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="relative text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground relative"
                 onClick={onCartClick}
               >
                 <ShoppingCart className="h-5 w-5" />
                 {cartItems > 0 && (
-                  <Badge 
-                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-primary-foreground text-primary"
-                  >
-                    {cartItems}
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-destructive text-destructive-foreground border-2 border-primary">
+                    <span style={{ fontSize: 'var(--text-xs)' }}>{cartItems}</span>
                   </Badge>
                 )}
-              </Button>
-
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="lg:hidden text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-              >
-                <Menu className="h-5 w-5" />
               </Button>
             </div>
           </div>
@@ -125,15 +141,28 @@ export function Header({ cartItems, onCartClick, onSearchChange, onAccountClick,
       </div>
 
       {/* Mobile Search */}
-      <div className="md:hidden bg-background border-t border-border">
+      <div className="md:hidden bg-card border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               type="text"
-              placeholder="Search for sarees, collections..."
-              className="pl-10 bg-muted border-border focus:border-primary"
-              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Search for sarees..."
+              className="pl-10 border-border h-9"
+              style={{ fontSize: 'var(--text-sm)' }}
+              onChange={(e) => {
+                onSearchChange(e.target.value);
+                if (e.target.value.trim()) {
+                  window.history.pushState({}, '', '/search');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                  window.history.pushState({}, '', '/search');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }
+              }}
             />
           </div>
         </div>

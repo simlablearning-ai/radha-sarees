@@ -130,7 +130,12 @@ export const syncedActions = {
   // Products
   addProduct: async (product: any) => {
     try {
-      const result = await api.addProduct(product);
+      // Ensure inStock is calculated from stock
+      const productWithStock = {
+        ...product,
+        inStock: product.stock > 0
+      };
+      const result = await api.addProduct(productWithStock);
       if (result.product) {
         useStore.getState().addProduct(result.product);
         return true; // Return true on success
@@ -145,7 +150,12 @@ export const syncedActions = {
 
   updateProduct: async (id: number, product: any) => {
     try {
-      const result = await api.updateProduct(id, product);
+      // Ensure inStock is calculated from stock
+      const productWithStock = {
+        ...product,
+        inStock: product.stock > 0
+      };
+      const result = await api.updateProduct(id, productWithStock);
       if (result.product) {
         useStore.getState().updateProduct(id, result.product);
       }

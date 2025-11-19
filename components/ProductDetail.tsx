@@ -58,8 +58,34 @@ export function ProductDetail({
     onAddToCart(product, quantity);
   };
 
-  const handleShare = () => {
-    toast.success("Product link copied to clipboard!");
+  const handleShare = async () => {
+    const url = window.location.href;
+    
+    // Try to use native share API if available
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.name,
+          text: `Check out this amazing saree: ${product.name}`,
+          url: url,
+        });
+        toast.success("Shared successfully!");
+      } catch (error) {
+        // User cancelled or error occurred
+        if (error.name !== 'AbortError') {
+          console.error('Share error:', error);
+        }
+      }
+    } else {
+      // Fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Product link copied to clipboard!");
+      } catch (error) {
+        console.error('Clipboard error:', error);
+        toast.error("Failed to copy link");
+      }
+    }
   };
 
   return (

@@ -14,6 +14,7 @@ export interface Product {
   weight: string;
   isOrganic: boolean;
   inStock: boolean;
+  stock?: number; // Add stock field
   category: string; // Keep for backward compatibility
   categories: string[]; // New: Multiple categories
   tags: string[]; // New: Tags like "featured", "new-arrival", "bestseller"
@@ -191,6 +192,7 @@ export const useStore = create<StoreState>()(
           weight: "Pure Silk",
           isOrganic: false,
           inStock: true,
+          stock: 10, // Add stock field
           category: "Wedding",
           categories: ["Wedding", "Silk"],
           tags: ["featured", "new-arrival"],
@@ -207,6 +209,7 @@ export const useStore = create<StoreState>()(
           weight: "Pure Kanjivaram Silk",
           isOrganic: false,
           inStock: true,
+          stock: 5, // Add stock field
           category: "Wedding",
           categories: ["Wedding", "Silk"],
           tags: ["bestseller"],
@@ -223,6 +226,7 @@ export const useStore = create<StoreState>()(
           weight: "Georgette with Embroidery",
           isOrganic: false,
           inStock: true,
+          stock: 8, // Add stock field
           category: "Wedding",
           categories: ["Wedding", "Embroidery"],
           tags: ["new-arrival"],
@@ -239,6 +243,7 @@ export const useStore = create<StoreState>()(
           weight: "Pure Silk",
           isOrganic: false,
           inStock: true,
+          stock: 15, // Add stock field
           category: "Ethnic",
           categories: ["Ethnic", "Silk"],
           tags: ["featured"],
@@ -255,6 +260,7 @@ export const useStore = create<StoreState>()(
           weight: "Cotton Blend",
           isOrganic: true,
           inStock: true,
+          stock: 20, // Add stock field
           category: "Casuals",
           categories: ["Casuals", "Cotton"],
           tags: ["new-arrival"],

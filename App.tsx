@@ -4,6 +4,8 @@ import { useDataSync, syncedActions } from "./lib/useData";
 import { Hero } from "./components/Hero";
 import { ProductDetail } from "./components/ProductDetail";
 import { CategoryPage } from "./components/CategoryPage";
+import { Wishlist } from "./components/Wishlist";
+import { SearchResults } from "./components/SearchResults";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { Categories } from "./components/Categories";
@@ -18,7 +20,7 @@ import { Button } from "./components/ui/button";
 import { toast } from "sonner";
 import { Toaster } from "./components/ui/sonner";
 
-type ViewType = 'store' | 'admin' | 'product' | 'category' | 'customer-dashboard';
+type ViewType = 'store' | 'admin' | 'product' | 'category' | 'customer-dashboard' | 'wishlist' | 'search';
 
 interface CartItem {
   id: number;
@@ -72,6 +74,10 @@ export default function App() {
         const category = decodeURIComponent(path.replace('/category/', ''));
         setSelectedCategoryForPage(category);
         setView('category');
+      } else if (path === '/wishlist') {
+        setView('wishlist');
+      } else if (path === '/search') {
+        setView('search');
       } else {
         setView('store');
         setSelectedProductId(null);
@@ -100,6 +106,17 @@ export default function App() {
       product.tags && product.tags.includes('featured')
     );
   }, [products]);
+
+  // Limited products for homepage - show only 8 products
+  const homepageProducts = useMemo(() => {
+    if (featuredProducts.length > 0) {
+      // If there are featured products, show first 8
+      return featuredProducts.slice(0, 8);
+    } else {
+      // Otherwise show first 8 filtered products
+      return filteredProducts.slice(0, 8);
+    }
+  }, [featuredProducts, filteredProducts]);
 
   const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -187,6 +204,12 @@ export default function App() {
     window.scrollTo(0, 0);
   };
 
+  const handleWishlistClick = () => {
+    window.history.pushState({}, '', '/wishlist');
+    setView('wishlist');
+    window.scrollTo(0, 0);
+  };
+
   const handleAddToCartWithQuantity = (product: Product, quantity: number) => {
     setCartItems(prev => {
       const existingItem = prev.find(item => item.id === product.id);
@@ -265,6 +288,99 @@ export default function App() {
     );
   }
 
+  // If wishlist view, render wishlist
+  if (view === 'wishlist') {
+    return (
+      <>
+        <Header
+          cartItems={totalCartItems}
+          onCartClick={() => setIsCartOpen(true)}
+          onSearchChange={setSearchQuery}
+          onAccountClick={handleAccountClick}
+          customerName={currentCustomer?.name}
+          onCategoryPageSelect={handleCategoryPageSelect}
+          onWishlistClick={handleWishlistClick}
+        />
+        
+        <Wishlist
+          products={products.filter(p => wishlist.includes(p.id))}
+          onBack={handleBackToHome}
+          onAddToCart={handleAddToCart}
+          onToggleWishlist={handleToggleWishlist}
+          wishlist={wishlist}
+          onProductClick={handleProductClick}
+        />
+        
+        <Footer />
+        
+        <Cart
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          items={cartItems}
+          onUpdateQuantity={handleUpdateQuantity}
+          onRemoveItem={handleRemoveItem}
+          onProceedToCheckout={handleProceedToCheckout}
+        />
+
+        <Checkout
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          items={cartItems}
+          onCheckoutComplete={handleCheckoutComplete}
+        />
+
+        <Toaster />
+      </>
+    );
+  }
+
+  // If search view, render search results
+  if (view === 'search') {
+    return (
+      <>
+        <Header
+          cartItems={totalCartItems}
+          onCartClick={() => setIsCartOpen(true)}
+          onSearchChange={setSearchQuery}
+          onAccountClick={handleAccountClick}
+          customerName={currentCustomer?.name}
+          onCategoryPageSelect={handleCategoryPageSelect}
+          onWishlistClick={handleWishlistClick}
+        />
+        
+        <SearchResults
+          searchQuery={searchQuery}
+          products={products}
+          onBack={handleBackToHome}
+          onAddToCart={handleAddToCart}
+          onToggleWishlist={handleToggleWishlist}
+          wishlist={wishlist}
+          onProductClick={handleProductClick}
+        />
+        
+        <Footer />
+        
+        <Cart
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          items={cartItems}
+          onUpdateQuantity={handleUpdateQuantity}
+          onRemoveItem={handleRemoveItem}
+          onProceedToCheckout={handleProceedToCheckout}
+        />
+
+        <Checkout
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          items={cartItems}
+          onCheckoutComplete={handleCheckoutComplete}
+        />
+
+        <Toaster />
+      </>
+    );
+  }
+
   // Get selected product
   const selectedProduct = selectedProductId ? products.find(p => p.id === selectedProductId) : null;
 
@@ -324,6 +440,7 @@ export default function App() {
           onAccountClick={handleAccountClick}
           customerName={currentCustomer?.name}
           onCategoryPageSelect={handleCategoryPageSelect}
+          onWishlistClick={handleWishlistClick}
         />
         
         <CategoryPage
@@ -368,6 +485,7 @@ export default function App() {
         onAccountClick={handleAccountClick}
         customerName={currentCustomer?.name}
         onCategoryPageSelect={handleCategoryPageSelect}
+        onWishlistClick={handleWishlistClick}
       />
       
       <Hero />
@@ -380,7 +498,7 @@ export default function App() {
       <Features />
       
       <ProductGrid
-        products={featuredProducts.length > 0 ? featuredProducts : filteredProducts}
+        products={homepageProducts}
         onAddToCart={handleAddToCart}
         onToggleWishlist={handleToggleWishlist}
         wishlist={wishlist}

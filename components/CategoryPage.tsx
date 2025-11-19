@@ -5,6 +5,7 @@ import { ProductCard, Product } from "./ProductCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Card, CardContent } from "./ui/card";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { useStore } from "../lib/store";
 
 interface CategoryPageProps {
   category: string;
@@ -27,15 +28,34 @@ export function CategoryPage({
 }: CategoryPageProps) {
   const [sortBy, setSortBy] = useState("featured");
   const [priceRange, setPriceRange] = useState("all");
+  const { siteSettings } = useStore();
 
-  // Category images mapping
-  const categoryImages: { [key: string]: string } = {
-    Wedding: "/images/category-wedding.jpg",
-    Ethnic: "/images/category-ethnic.jpg",
-    Casuals: "/images/category-casual.jpg",
-    Festival: "/images/category-festival.jpg",
-    "New Arrivals": "/images/category-newarrivals.jpg",
-    Celebrity: "/images/category-celebrity.jpg",
+  // Get hero background settings from site settings
+  const backgroundOpacity = siteSettings.heroBackgroundOpacity || 0.5;
+  const overlayOpacity = siteSettings.heroOverlayOpacity || 0.3;
+  const overlayColor = siteSettings.heroOverlayColor || '#000000';
+  const customBackgroundImage = siteSettings.customBackgroundImage;
+
+  // Get category image from site settings or use fallback
+  const getCategoryImage = () => {
+    if (siteSettings.categoryImages) {
+      const categoryImage = siteSettings.categoryImages.find(
+        (img) => img.name === category
+      );
+      if (categoryImage?.url) {
+        return categoryImage.url;
+      }
+    }
+    // Fallback images based on category
+    const fallbackImages: { [key: string]: string } = {
+      Wedding: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80",
+      Ethnic: "https://images.unsplash.com/photo-1583391733981-0b46bbf14a37?w=800&q=80",
+      Casuals: "https://images.unsplash.com/photo-1624206112918-f140f087f9db?w=800&q=80",
+      Festival: "https://images.unsplash.com/photo-1610030469038-1f0d0c5d3d7c?w=800&q=80",
+      "New Arrivals": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=800&q=80",
+      Celebrity: "https://images.unsplash.com/photo-1610030469664-cecb55f22d98?w=800&q=80",
+    };
+    return fallbackImages[category] || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80";
   };
 
   // Category descriptions
@@ -94,16 +114,54 @@ export function CategoryPage({
       </div>
 
       {/* Category Hero */}
-      <div className="relative h-64 bg-muted overflow-hidden">
-        <ImageWithFallback
-          src={categoryImages[category] || "/images/category-default.jpg"}
-          alt={category}
-          className="w-full h-full object-cover opacity-40"
+      <div className="relative h-64 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/10">
+        {/* Custom Background Image from Hero Settings */}
+        {customBackgroundImage && (
+          <div 
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url('${customBackgroundImage}')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              opacity: backgroundOpacity
+            }}
+          />
+        )}
+
+        {/* Background Overlay */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            backgroundColor: overlayColor,
+            opacity: overlayOpacity,
+          }}
         />
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-background/80 to-transparent">
-          <div className="text-center">
-            <h1 className="text-foreground mb-4">{category} Sarees</h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto px-4">
+
+        {/* Category Image Layer */}
+        <ImageWithFallback
+          src={getCategoryImage()}
+          alt={category}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ opacity: 0.3 }}
+        />
+
+        {/* Content Layer */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center z-10">
+            <h1 
+              className="text-foreground mb-4 drop-shadow-lg" 
+              style={{ 
+                fontFamily: 'var(--font-family-inter)', 
+                fontSize: 'var(--text-3xl)' 
+              }}
+            >
+              {category} Sarees
+            </h1>
+            <p 
+              className="text-muted-foreground max-w-2xl mx-auto px-4 drop-shadow-md"
+              style={{ fontSize: 'var(--text-base)' }}
+            >
               {categoryDescriptions[category] || "Explore our exquisite collection"}
             </p>
           </div>

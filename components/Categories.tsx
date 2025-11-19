@@ -71,10 +71,19 @@ export function Categories({ onCategorySelect, onCategoryPageSelect }: Categorie
     <section className="py-16 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-foreground mb-4">
+          <h2 
+            className="text-foreground mb-4"
+            style={{ 
+              fontFamily: 'var(--font-family-inter)', 
+              fontSize: 'var(--text-3xl)' 
+            }}
+          >
             Shop by Collection
           </h2>
-          <p className="text-muted-foreground">
+          <p 
+            className="text-muted-foreground"
+            style={{ fontSize: 'var(--text-base)' }}
+          >
             Explore our exquisite collection of sarees for every occasion
           </p>
         </div>
@@ -97,10 +106,19 @@ export function Categories({ onCategorySelect, onCategoryPageSelect }: Categorie
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </div>
                 <div className="p-4 text-center">
-                  <h3 className="text-foreground mb-1">
+                  <h3 
+                    className="text-foreground mb-1"
+                    style={{ 
+                      fontFamily: 'var(--font-family-inter)', 
+                      fontSize: 'var(--text-base)' 
+                    }}
+                  >
                     {category.name}
                   </h3>
-                  <p className="text-muted-foreground">
+                  <p 
+                    className="text-muted-foreground"
+                    style={{ fontSize: 'var(--text-sm)' }}
+                  >
                     {category.count} items
                   </p>
                 </div>

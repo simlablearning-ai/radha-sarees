@@ -15,6 +15,7 @@ export interface Product {
   weight: string;
   isOrganic?: boolean;
   inStock: boolean;
+  stock?: number;
 }
 
 interface ProductCardProps {
@@ -100,7 +101,13 @@ export function ProductCard({
         </div>
         
         <div className="p-4 space-y-2">
-          <h3 className="text-foreground line-clamp-2">
+          <h3 
+            className="text-foreground line-clamp-2"
+            style={{ 
+              fontFamily: 'var(--font-family-inter)', 
+              fontSize: 'var(--text-base)' 
+            }}
+          >
             {product.name}
           </h3>
           
@@ -117,16 +124,30 @@ export function ProductCard({
                 />
               ))}
             </div>
-            <span className="text-muted-foreground">
+            <span 
+              className="text-muted-foreground"
+              style={{ fontSize: 'var(--text-sm)' }}
+            >
               ({product.reviews})
             </span>
           </div>
           
-          <p className="text-muted-foreground">{product.weight}</p>
+          <p 
+            className="text-muted-foreground"
+            style={{ fontSize: 'var(--text-sm)' }}
+          >
+            {product.weight}
+          </p>
           
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-2">
-              <span className="text-primary">
+              <span 
+                className="text-primary"
+                style={{ 
+                  fontFamily: 'var(--font-family-inter)', 
+                  fontSize: 'var(--text-lg)' 
+                }}
+              >
                 ₹{product.price.toLocaleString('en-IN')}
               </span>
               {product.originalPrice && (
