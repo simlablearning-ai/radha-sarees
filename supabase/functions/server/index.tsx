@@ -830,24 +830,22 @@ app.post("/make-server-226dc7f7/notifications/order", async (c) => {
   try {
     const { orderId, phone, type } = await c.req.json();
     
-    if (!orderId || !phone || !type) {
-      return c.json({ error: 'Missing required fields' }, 400);
-    }
-
+    // Get order details
     const order = await kv.get(`order:${orderId}`);
     if (!order) {
       return c.json({ error: 'Order not found' }, 404);
     }
 
-    const customerName = order.customerName || 'Customer';
-    
+    // Get customer name if logged in
+    let customerName = order.customerInfo?.name || 'Customer';
+
     if (type === 'placed') {
       await notifications.sendOrderPlacedNotification(order, phone, customerName);
     } else if (['shipped', 'delivered', 'cancelled'].includes(type)) {
       const statusMap = {
-        'shipped': 'Shipped',
-        'delivered': 'Delivered',
-        'cancelled': 'Cancelled'
+        shipped: 'shipped',
+        delivered: 'delivered',
+        cancelled: 'cancelled'
       };
       await notifications.sendOrderStatusNotification(
         order, 
@@ -863,6 +861,48 @@ app.post("/make-server-226dc7f7/notifications/order", async (c) => {
   } catch (error) {
     console.log('Send order notification error:', error);
     return c.json({ error: `Failed to send notification: ${error.message}` }, 500);
+  }
+});
+
+// Fast2SMS Webhook - Receive delivery reports
+app.post("/make-server-226dc7f7/sms-webhook", async (c) => {
+  try {
+    const webhookData = await c.req.json();
+    
+    console.log('Fast2SMS Webhook received:', JSON.stringify(webhookData, null, 2));
+    
+    // Fast2SMS sends delivery reports in this format:
+    // {
+    //   "event": "DLR",
+    //   "message_id": "abc123",
+    //   "mobile": "9876543210",
+    //   "status": "DELIVRD", // or "FAILED", "PENDING", etc.
+    //   "delivered_at": "2025-11-20 10:30:00"
+    // }
+    
+    // Store the delivery report for tracking
+    if (webhookData.message_id) {
+      const dlrKey = `sms_dlr:${webhookData.message_id}`;
+      await kv.set(dlrKey, {
+        ...webhookData,
+        receivedAt: new Date().toISOString()
+      });
+      
+      console.log(`Delivery report stored for message ${webhookData.message_id}: ${webhookData.status}`);
+    }
+    
+    // Return success response to Fast2SMS
+    return c.json({ 
+      success: true, 
+      message: 'Webhook received successfully' 
+    });
+  } catch (error) {
+    console.log('Fast2SMS webhook error:', error);
+    // Still return 200 to prevent Fast2SMS from retrying
+    return c.json({ 
+      success: false, 
+      error: error.message 
+    }, 200);
   }
 });
 
