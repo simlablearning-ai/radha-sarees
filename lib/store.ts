@@ -99,6 +99,13 @@ export interface CategoryImage {
   url: string;
 }
 
+export interface CategoryConfig {
+  id: string;
+  name: string;
+  displayName: string;
+  url: string;
+}
+
 export interface SiteSettings {
   heroAnimation: HeroAnimationType;
   heroBackgroundOpacity: number;
@@ -109,6 +116,7 @@ export interface SiteSettings {
   heroImages?: HeroImage[]; // Images for hero section
   categoryImages?: CategoryImage[]; // Images for category section
   heroShowCategories?: boolean; // Show/hide category boxes on hero section
+  categories?: CategoryConfig[]; // Customizable category names and URLs
 }
 
 export interface CustomerProfile {
@@ -390,7 +398,14 @@ export const useStore = create<StoreState>()(
         heroBackgroundOpacity: 0.5,
         heroOverlayOpacity: 0.3,
         heroOverlayColor: '#000000',
-        heroShowCategories: true // Default to showing categories
+        heroShowCategories: true, // Default to showing categories
+        categories: [
+          { id: 'semi-silk', name: 'Semi Silk Sarees', displayName: 'Semi Silk Sarees', url: '/category/Semi%20Silk%20Sarees' },
+          { id: 'cotton', name: 'Cotton Sarees', displayName: 'Cotton Sarees', url: '/category/Cotton%20Sarees' },
+          { id: 'boutique', name: 'Boutique Sarees', displayName: 'Boutique Sarees', url: '/category/Boutique%20Sarees' },
+          { id: 'partywear', name: 'Party wear sarees', displayName: 'Party wear sarees', url: '/category/Party%20wear%20sarees' },
+          { id: 'under-499', name: 'Under Rs.499', displayName: 'Under Rs.499', url: '/category/Under%20Rs.499' }
+        ]
       },
       
       // Authentication

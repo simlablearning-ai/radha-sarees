@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Plus, Edit, Trash2, Search, Package, Upload, Download, Filter, FileSpreadsheet, X } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Package, Upload, Download, Filter, FileSpreadsheet, X, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 
@@ -95,7 +95,72 @@ export function ProductManagement() {
     variations: [],
   });
 
-  const categories = ["Wedding", "Ethnic", "Casuals", "Festival", "New Arrivals", "Celebrity"];
+  const categories = ["Semi Silk Sarees", "Cotton Sarees", "Boutique Sarees", "Party wear sarees", "Under Rs.499"];
+
+  // Helper function to convert file to base64
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Handle main product image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image size should be less than 2MB');
+      return;
+    }
+
+    try {
+      const base64 = await convertFileToBase64(file);
+      setFormData({ ...formData, image: base64 });
+      toast.success('Image uploaded successfully!');
+    } catch (error) {
+      toast.error('Failed to upload image');
+    }
+  };
+
+  // Handle variation image upload
+  const handleVariationImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image size should be less than 2MB');
+      return;
+    }
+
+    try {
+      const base64 = await convertFileToBase64(file);
+      const newVariations = [...formData.variations];
+      newVariations[index].image = base64;
+      setFormData({ ...formData, variations: newVariations });
+      toast.success('Variation image uploaded!');
+    } catch (error) {
+      toast.error('Failed to upload image');
+    }
+  };
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -718,14 +783,78 @@ export function ProductManagement() {
                 </div>
 
                 <div>
-                  <Label htmlFor="image">Image URL *</Label>
-                  <Input
-                    id="image"
-                    value={formData.image}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    placeholder="https://..."
-                    required
-                  />
+                  <Label htmlFor="image">Product Image *</Label>
+                  
+                  {/* Image Preview */}
+                  {formData.image && (
+                    <div className="mb-3 relative inline-block">
+                      <ImageWithFallback
+                        src={formData.image}
+                        alt="Product preview"
+                        className="w-32 h-32 object-cover rounded-lg border border-border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
+                        onClick={() => setFormData({ ...formData, image: '' })}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div className="space-y-3">
+                    {/* File Upload Option */}
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-2 block">
+                        Upload Image File
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                          id="image-upload"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => document.getElementById('image-upload')?.click()}
+                          className="flex-1"
+                        >
+                          <ImageIcon className="h-4 w-4 mr-2" />
+                          Choose Image
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Max size: 2MB • Formats: JPG, PNG, WebP
+                      </p>
+                    </div>
+
+                    {/* OR Divider */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 border-t border-border"></div>
+                      <span className="text-xs text-muted-foreground">OR</span>
+                      <div className="flex-1 border-t border-border"></div>
+                    </div>
+
+                    {/* URL Input Option */}
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-2 block">
+                        Paste Image URL
+                      </Label>
+                      <Input
+                        id="image"
+                        value={formData.image}
+                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                        placeholder="https://example.com/image.jpg"
+                        required={!formData.image}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -887,16 +1016,60 @@ export function ProductManagement() {
                               </p>
                             </div>
                             <div>
-                              <Label className="text-xs">Image URL (Optional)</Label>
-                              <Input
-                                placeholder="https://..."
-                                value={variation.image}
-                                onChange={(e) => {
-                                  const newVariations = [...formData.variations];
-                                  newVariations[index].image = e.target.value;
-                                  setFormData({ ...formData, variations: newVariations });
-                                }}
-                              />
+                              <Label className="text-xs">Image (Optional)</Label>
+                              
+                              {/* Variation Image Preview */}
+                              {variation.image && (
+                                <div className="mb-2 relative inline-block">
+                                  <ImageWithFallback
+                                    src={variation.image}
+                                    alt={`${variation.color} preview`}
+                                    className="w-16 h-16 object-cover rounded border border-border"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="sm"
+                                    className="absolute -top-1 -right-1 h-4 w-4 p-0 rounded-full"
+                                    onClick={() => {
+                                      const newVariations = [...formData.variations];
+                                      newVariations[index].image = '';
+                                      setFormData({ ...formData, variations: newVariations });
+                                    }}
+                                  >
+                                    <X className="h-2 w-2" />
+                                  </Button>
+                                </div>
+                              )}
+                              
+                              <div className="flex gap-2">
+                                <Input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handleVariationImageUpload(e, index)}
+                                  className="hidden"
+                                  id={`variation-image-${index}`}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => document.getElementById(`variation-image-${index}`)?.click()}
+                                >
+                                  <ImageIcon className="h-3 w-3 mr-1" />
+                                  Upload
+                                </Button>
+                                <Input
+                                  placeholder="or paste URL"
+                                  className="text-xs"
+                                  value={variation.image}
+                                  onChange={(e) => {
+                                    const newVariations = [...formData.variations];
+                                    newVariations[index].image = e.target.value;
+                                    setFormData({ ...formData, variations: newVariations });
+                                  }}
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1277,13 +1450,78 @@ export function ProductManagement() {
             </div>
 
             <div>
-              <Label htmlFor="edit-image">Image URL *</Label>
-              <Input
-                id="edit-image"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                required
-              />
+              <Label htmlFor="edit-image">Product Image *</Label>
+              
+              {/* Image Preview */}
+              {formData.image && (
+                <div className="mb-3 relative inline-block">
+                  <ImageWithFallback
+                    src={formData.image}
+                    alt="Product preview"
+                    className="w-32 h-32 object-cover rounded-lg border border-border"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
+                    onClick={() => setFormData({ ...formData, image: '' })}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+              
+              <div className="space-y-3">
+                {/* File Upload Option */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-2 block">
+                    Upload Image File
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="edit-image-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('edit-image-upload')?.click()}
+                      className="flex-1"
+                    >
+                      <ImageIcon className="h-4 w-4 mr-2" />
+                      Choose Image
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Max size: 2MB • Formats: JPG, PNG, WebP
+                  </p>
+                </div>
+
+                {/* OR Divider */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 border-t border-border"></div>
+                  <span className="text-xs text-muted-foreground">OR</span>
+                  <div className="flex-1 border-t border-border"></div>
+                </div>
+
+                {/* URL Input Option */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-2 block">
+                    Paste Image URL
+                  </Label>
+                  <Input
+                    id="edit-image"
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    placeholder="https://example.com/image.jpg"
+                    required={!formData.image}
+                  />
+                </div>
+              </div>
             </div>
 
             <div>
@@ -1442,16 +1680,60 @@ export function ProductManagement() {
                           </p>
                         </div>
                         <div>
-                          <Label className="text-xs">Image URL (Optional)</Label>
-                          <Input
-                            placeholder="https://..."
-                            value={variation.image}
-                            onChange={(e) => {
-                              const newVariations = [...formData.variations];
-                              newVariations[index].image = e.target.value;
-                              setFormData({ ...formData, variations: newVariations });
-                            }}
-                          />
+                          <Label className="text-xs">Image (Optional)</Label>
+                          
+                          {/* Variation Image Preview */}
+                          {variation.image && (
+                            <div className="mb-2 relative inline-block">
+                              <ImageWithFallback
+                                src={variation.image}
+                                alt={`${variation.color} preview`}
+                                className="w-16 h-16 object-cover rounded border border-border"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute -top-1 -right-1 h-4 w-4 p-0 rounded-full"
+                                onClick={() => {
+                                  const newVariations = [...formData.variations];
+                                  newVariations[index].image = '';
+                                  setFormData({ ...formData, variations: newVariations });
+                                }}
+                              >
+                                <X className="h-2 w-2" />
+                              </Button>
+                            </div>
+                          )}
+                          
+                          <div className="flex gap-2">
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleVariationImageUpload(e, index)}
+                              className="hidden"
+                              id={`edit-variation-image-${index}`}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => document.getElementById(`edit-variation-image-${index}`)?.click()}
+                            >
+                              <ImageIcon className="h-3 w-3 mr-1" />
+                              Upload
+                            </Button>
+                            <Input
+                              placeholder="or paste URL"
+                              className="text-xs"
+                              value={variation.image}
+                              onChange={(e) => {
+                                const newVariations = [...formData.variations];
+                                newVariations[index].image = e.target.value;
+                                setFormData({ ...formData, variations: newVariations });
+                              }}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>

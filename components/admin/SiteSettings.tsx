@@ -7,8 +7,9 @@ import { Label } from "../ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
 import { Slider } from "../ui/slider";
 import { Switch } from "../ui/switch";
-import { Sparkles, Palette, Save, RotateCcw, Layout } from "lucide-react";
+import { Sparkles, Palette, Save, RotateCcw, Layout, Tags } from "lucide-react";
 import { toast } from "sonner";
+import type { CategoryConfig } from "../../lib/store";
 
 export function SiteSettings() {
   const { siteSettings } = useStore();
@@ -34,6 +35,18 @@ export function SiteSettings() {
     siteSettings.heroShowCategories ?? true
   );
 
+  // Category Customization
+  const defaultCategories: CategoryConfig[] = [
+    { id: 'semi-silk', name: 'Semi Silk Sarees', displayName: 'Semi Silk Sarees', url: '/category/Semi%20Silk%20Sarees' },
+    { id: 'cotton', name: 'Cotton Sarees', displayName: 'Cotton Sarees', url: '/category/Cotton%20Sarees' },
+    { id: 'boutique', name: 'Boutique Sarees', displayName: 'Boutique Sarees', url: '/category/Boutique%20Sarees' },
+    { id: 'partywear', name: 'Party wear sarees', displayName: 'Party wear sarees', url: '/category/Party%20wear%20sarees' },
+    { id: 'under-499', name: 'Under Rs.499', displayName: 'Under Rs.499', url: '/category/Under%20Rs.499' }
+  ];
+  const [categories, setCategories] = useState<CategoryConfig[]>(
+    siteSettings.categories || defaultCategories
+  );
+
   const animations = [
     { value: 'float', label: 'Float', description: 'Gentle floating motion' },
     { value: 'rotate', label: 'Rotate', description: 'Smooth rotation effect' },
@@ -48,6 +61,7 @@ export function SiteSettings() {
       heroOverlayOpacity: heroOverlayOpacity / 100,
       heroOverlayColor,
       heroShowCategories,
+      categories,
     });
 
     if (success) {
@@ -63,6 +77,7 @@ export function SiteSettings() {
     setHeroOverlayOpacity(30);
     setHeroOverlayColor('#000000');
     setHeroShowCategories(true);
+    setCategories(defaultCategories);
 
     const success = await syncedActions.updateSiteSettings({
       heroAnimation: 'float',
@@ -70,6 +85,7 @@ export function SiteSettings() {
       heroOverlayOpacity: 0.3,
       heroOverlayColor: '#000000',
       heroShowCategories: true,
+      categories: defaultCategories,
     });
 
     if (success) {
@@ -392,6 +408,75 @@ export function SiteSettings() {
                 ? 'Categories are shown on the right with left-aligned title' 
                 : 'Title is centered with full width'
               }
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Category Names Customization */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Tags className="h-5 w-5 text-primary" />
+            Category Names
+          </CardTitle>
+          <CardDescription>
+            Customize the display names and URLs for categories shown on the homepage "Shop by Categories" section
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {categories.map((category, index) => (
+            <div key={category.id} className="p-4 rounded-lg border border-border space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-foreground">
+                  Category {index + 1}: {category.name}
+                </Label>
+                <span className="text-xs text-muted-foreground">ID: {category.id}</span>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Display Name</Label>
+                  <Input
+                    value={category.displayName}
+                    onChange={(e) => {
+                      const newCategories = [...categories];
+                      newCategories[index].displayName = e.target.value;
+                      setCategories(newCategories);
+                    }}
+                    placeholder="e.g., Semi Silk Sarees"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    This is the name shown to customers
+                  </p>
+                </div>
+                
+                <div>
+                  <Label className="text-xs text-muted-foreground">URL Path</Label>
+                  <Input
+                    value={category.url}
+                    onChange={(e) => {
+                      const newCategories = [...categories];
+                      newCategories[index].url = e.target.value;
+                      setCategories(newCategories);
+                    }}
+                    placeholder="/category/Semi%20Silk%20Sarees"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Category page URL (auto-generated)
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          <div className="p-4 rounded-lg border border-primary/20 bg-primary/5">
+            <p className="text-sm text-foreground mb-2">
+              <strong>Note:</strong> Category Images
+            </p>
+            <p className="text-xs text-muted-foreground">
+              To change category images, go to <strong>Image Management</strong> → <strong>Category Images</strong> section.
+              Make sure the category name in Image Management matches the name here.
             </p>
           </div>
         </CardContent>

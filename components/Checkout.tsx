@@ -30,7 +30,10 @@ export function Checkout({ isOpen, onClose, items, onCheckoutComplete }: Checkou
     shippingAddress: '',
   });
 
-  const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalAmount = items.reduce((sum, item) => {
+    const itemPrice = item.price + (item.selectedVariation?.priceAdjustment || 0);
+    return sum + itemPrice * item.quantity;
+  }, 0);
   const razorpayEnabled = paymentGateways.find(g => g.id === 'razorpay')?.enabled;
   const phonePeEnabled = paymentGateways.find(g => g.id === 'phonepe')?.enabled;
 
@@ -44,8 +47,13 @@ export function Checkout({ isOpen, onClose, items, onCheckoutComplete }: Checkou
       productId: item.id,
       productName: item.name,
       quantity: item.quantity,
-      price: item.price,
+      price: item.price + (item.selectedVariation?.priceAdjustment || 0),
       image: item.image,
+      ...(item.selectedVariation && {
+        selectedVariation: {
+          color: item.selectedVariation.color
+        }
+      })
     }));
 
     try {
@@ -146,16 +154,26 @@ export function Checkout({ isOpen, onClose, items, onCheckoutComplete }: Checkou
                   <CardTitle>Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {items.map((item) => (
-                    <div key={item.id} className="flex justify-between">
-                      <span className="text-foreground">
-                        {item.name} × {item.quantity}
-                      </span>
-                      <span className="text-foreground">
-                        ₹{(item.price * item.quantity).toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                  ))}
+                  {items.map((item) => {
+                    const itemPrice = item.price + (item.selectedVariation?.priceAdjustment || 0);
+                    return (
+                      <div key={`${item.id}-${item.selectedVariation?.id || 'no-var'}`} className="space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-foreground">
+                            {item.name} × {item.quantity}
+                          </span>
+                          <span className="text-foreground">
+                            ₹{(itemPrice * item.quantity).toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        {item.selectedVariation && (
+                          <p className="text-xs text-primary">
+                            Color: {item.selectedVariation.color}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                   <div className="pt-3 border-t border-border">
                     <div className="flex justify-between items-center">
                       <span className="text-foreground">Total</span>

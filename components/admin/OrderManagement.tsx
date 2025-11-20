@@ -266,7 +266,12 @@ export function OrderManagement() {
                     >
                       <div className="flex items-center gap-3">
                         <div>
-                          <p className="text-foreground">{item.name}</p>
+                          <p className="text-foreground">{item.productName || item.name}</p>
+                          {item.selectedVariation && (
+                            <p className="text-primary text-xs font-medium">
+                              Color: {item.selectedVariation.color}
+                            </p>
+                          )}
                           <p className="text-muted-foreground text-sm">
                             Quantity: {item.quantity}
                           </p>

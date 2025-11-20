@@ -23,7 +23,7 @@ import {
 interface ProductDetailProps {
   product: Product;
   onBack: () => void;
-  onAddToCart: (product: Product, quantity: number) => void;
+  onAddToCart: (product: Product, quantity: number, selectedVariation: string | null) => void;
   onToggleWishlist: (productId: number) => void;
   isInWishlist: boolean;
   relatedProducts: Product[];
@@ -85,7 +85,7 @@ export function ProductDetail({
   };
 
   const handleAddToCart = () => {
-    onAddToCart(product, quantity);
+    onAddToCart(product, quantity, selectedVariation);
   };
 
   const handleShare = async () => {

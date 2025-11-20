@@ -3,9 +3,11 @@ import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { useStore } from "../lib/store";
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
+  displayName: string;
   image: string;
+  url: string;
   count: number;
 }
 
@@ -15,57 +17,58 @@ interface CategoriesProps {
 }
 
 export function Categories({ onCategorySelect, onCategoryPageSelect }: CategoriesProps) {
-  const { siteSettings } = useStore();
+  const { siteSettings, products } = useStore();
   
-  // Get category images from settings or use defaults
-  const categoryImagesFromSettings = siteSettings.categoryImages || [
-    { name: "Wedding", url: "https://images.unsplash.com/photo-1726981448126-c7fc9237cdb5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwc2FyZWUlMjBzaWxrfGVufDF8fHx8MTc2MzM2NDU5Mnww&ixlib=rb-4.1.0&q=80&w=1080" },
-    { name: "Ethnic", url: "https://images.unsplash.com/photo-1742287721821-ddf522b3f37b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxldGhuaWMlMjBzaWxrJTIwc2FyZWV8ZW58MXx8fHwxNzYzMzY0NTkyfDA&ixlib=rb-4.1.0&q=80&w=1080" },
-    { name: "Casuals", url: "https://images.unsplash.com/photo-1692107271822-50cc09b2bf73?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXN1YWwlMjBjb3R0b24lMjBzYXJlZXxlbnwxfHx8fDE3NjMzMTk4NzR8MA&ixlib=rb-4.1.0&q=80&w=1080" },
-    { name: "Festival", url: "https://images.unsplash.com/photo-1761125056724-fb6485468a9a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmZXN0aXZhbCUyMHNhcmVlJTIwdHJhZGl0aW9uYWx8ZW58MXx8fHwxNzYzMzY0NTkzfDA&ixlib=rb-4.1.0&q=80&w=1080" },
-    { name: "New Arrivals", url: "https://images.unsplash.com/photo-1756483509177-bbabd67a3234?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZXNpZ25lciUyMHNhcmVlJTIwZWxlZ2FudHxlbnwxfHx8fDE3NjMzNjQ1OTN8MA&ixlib=rb-4.1.0&q=80&w=1080" },
-    { name: "Celebrity", url: "https://images.unsplash.com/photo-1762068863008-dbeb2e2c6896?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBzYXJlZSUyMGJyaWRhbHxlbnwxfHx8fDE3NjMzNjQ1OTN8MA&ixlib=rb-4.1.0&q=80&w=1080" }
+  // Get categories from settings or use defaults
+  const categoriesConfig = siteSettings.categories || [
+    { id: 'semi-silk', name: 'Semi Silk Sarees', displayName: 'Semi Silk Sarees', url: '/category/Semi%20Silk%20Sarees' },
+    { id: 'cotton', name: 'Cotton Sarees', displayName: 'Cotton Sarees', url: '/category/Cotton%20Sarees' },
+    { id: 'boutique', name: 'Boutique Sarees', displayName: 'Boutique Sarees', url: '/category/Boutique%20Sarees' },
+    { id: 'partywear', name: 'Party wear sarees', displayName: 'Party wear sarees', url: '/category/Party%20wear%20sarees' },
+    { id: 'under-499', name: 'Under Rs.499', displayName: 'Under Rs.499', url: '/category/Under%20Rs.499' }
   ];
 
-  // Create categories array with images from settings
-  const categories: Category[] = [
-    {
-      id: 1,
-      name: "Wedding",
-      image: categoryImagesFromSettings.find(c => c.name === "Wedding")?.url || categoryImagesFromSettings[0].url,
-      count: 45
-    },
-    {
-      id: 2,
-      name: "Ethnic",
-      image: categoryImagesFromSettings.find(c => c.name === "Ethnic")?.url || categoryImagesFromSettings[1].url,
-      count: 38
-    },
-    {
-      id: 3,
-      name: "Casuals",
-      image: categoryImagesFromSettings.find(c => c.name === "Casuals")?.url || categoryImagesFromSettings[2].url,
-      count: 52
-    },
-    {
-      id: 4,
-      name: "Festival",
-      image: categoryImagesFromSettings.find(c => c.name === "Festival")?.url || categoryImagesFromSettings[3].url,
-      count: 28
-    },
-    {
-      id: 5,
-      name: "New Arrivals",
-      image: categoryImagesFromSettings.find(c => c.name === "New Arrivals")?.url || categoryImagesFromSettings[4].url,
-      count: 24
-    },
-    {
-      id: 6,
-      name: "Celebrity",
-      image: categoryImagesFromSettings.find(c => c.name === "Celebrity")?.url || categoryImagesFromSettings[5].url,
-      count: 16
+  // Default images for categories
+  const defaultImages: { [key: string]: string } = {
+    'semi-silk': 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800',
+    'cotton': 'https://images.unsplash.com/photo-1692107271822-50cc09b2bf73?w=800',
+    'boutique': 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800',
+    'partywear': 'https://images.unsplash.com/photo-1583391733981-12b336e93626?w=800',
+    'under-499': 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=800'
+  };
+  
+  // Get category images from settings
+  const categoryImagesFromSettings = siteSettings.categoryImages || [];
+
+  // Build categories with counts and images
+  const categories: Category[] = categoriesConfig.map((cat, index) => {
+    // Count products in this category
+    let count = 0;
+    
+    if (cat.id === 'under-499') {
+      // Special case: count products under 499
+      count = products.filter(p => p.price < 499).length;
+    } else {
+      // Count products matching category name
+      count = products.filter(p => 
+        p.category === cat.name || 
+        (p.categories && p.categories.includes(cat.name))
+      ).length;
     }
-  ];
+
+    // Get image from settings or use default
+    const imageFromSettings = categoryImagesFromSettings.find(c => c.name === cat.name);
+    const image = imageFromSettings?.url || defaultImages[cat.id] || defaultImages['semi-silk'];
+
+    return {
+      id: cat.id,
+      name: cat.name,
+      displayName: cat.displayName,
+      image,
+      url: cat.url,
+      count
+    };
+  });
 
   return (
     <section className="py-16 bg-background">
@@ -78,7 +81,7 @@ export function Categories({ onCategorySelect, onCategoryPageSelect }: Categorie
               fontSize: 'var(--text-3xl)' 
             }}
           >
-            Shop by Collection
+            Shop by Categories
           </h2>
           <p 
             className="text-muted-foreground"
@@ -88,7 +91,7 @@ export function Categories({ onCategorySelect, onCategoryPageSelect }: Categorie
           </p>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {categories.map((category) => (
             <Card 
               key={category.id}
@@ -100,7 +103,7 @@ export function Categories({ onCategorySelect, onCategoryPageSelect }: Categorie
                 <div className="relative overflow-hidden">
                   <ImageWithFallback
                     src={category.image}
-                    alt={category.name}
+                    alt={category.displayName}
                     className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -113,7 +116,7 @@ export function Categories({ onCategorySelect, onCategoryPageSelect }: Categorie
                       fontSize: 'var(--text-base)' 
                     }}
                   >
-                    {category.name}
+                    {category.displayName}
                   </h3>
                   <p 
                     className="text-muted-foreground"

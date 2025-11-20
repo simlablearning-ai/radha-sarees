@@ -28,6 +28,11 @@ interface CartItem {
   price: number;
   image: string;
   quantity: number;
+  selectedVariation?: {
+    id: string;
+    color: string;
+    priceAdjustment?: number;
+  };
 }
 
 interface Product {
@@ -39,6 +44,11 @@ interface Product {
   description?: string;
   tags?: string[];
   stock?: number;
+  variations?: {
+    id: string;
+    color: string;
+    priceAdjustment?: number;
+  }[];
 }
 
 export default function App() {
@@ -210,20 +220,44 @@ export default function App() {
     window.scrollTo(0, 0);
   };
 
-  const handleAddToCartWithQuantity = (product: Product, quantity: number) => {
+  const handleAddToCartWithQuantity = (product: Product, quantity: number, variationId?: string) => {
+    // Find variation details if variationId provided
+    const variation = variationId && product.variations 
+      ? product.variations.find(v => v.id === variationId)
+      : undefined;
+    
     setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id);
+      // For products with variations, match both product ID and variation ID
+      const existingItem = variation
+        ? prev.find(item => item.id === product.id && item.selectedVariation?.id === variationId)
+        : prev.find(item => item.id === product.id && !item.selectedVariation);
+      
       if (existingItem) {
         return prev.map(item =>
-          item.id === product.id
+          (variation 
+            ? (item.id === product.id && item.selectedVariation?.id === variationId)
+            : (item.id === product.id && !item.selectedVariation))
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       } else {
-        return [...prev, { ...product, quantity }];
+        const cartItem: CartItem = {
+          ...product,
+          quantity,
+          ...(variation && {
+            selectedVariation: {
+              id: variation.id,
+              color: variation.color,
+              priceAdjustment: variation.priceAdjustment
+            }
+          })
+        };
+        return [...prev, cartItem];
       }
     });
-    toast.success(`${product.name} added to cart!`);
+    
+    const variationText = variation ? ` (${variation.color})` : '';
+    toast.success(`${product.name}${variationText} added to cart!`);
   };
 
   const handleProceedToCheckout = () => {
