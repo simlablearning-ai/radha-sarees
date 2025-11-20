@@ -757,14 +757,6 @@
     margin-left: calc(var(--spacing) * 4);
   }
 
-  .ml-6 {
-    margin-left: calc(var(--spacing) * 6);
-  }
-
-  .ml-8 {
-    margin-left: calc(var(--spacing) * 8);
-  }
-
   .ml-64 {
     margin-left: calc(var(--spacing) * 64);
   }
@@ -965,6 +957,10 @@
 
   .min-h-16 {
     min-height: calc(var(--spacing) * 16);
+  }
+
+  .min-h-\[80px\] {
+    min-height: 80px;
   }
 
   .min-h-screen {
@@ -2099,6 +2095,10 @@
     font-weight: var(--font-weight-semibold);
   }
 
+  .break-all {
+    word-break: break-all;
+  }
+
   .whitespace-nowrap {
     white-space: nowrap;
   }
@@ -2444,10 +2444,6 @@
   .select-none {
     -webkit-user-select: none;
     user-select: none;
-  }
-
-  .running {
-    animation-play-state: running;
   }
 
   @media (hover: hover) {

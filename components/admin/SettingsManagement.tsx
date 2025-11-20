@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "../../lib/store";
 import { api } from "../../lib/api";
 import { Button } from "../ui/button";
@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { Switch } from "../ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { CreditCard, Save, MessageSquare, Send } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "sonner@2.0.3";
 import { SiteSettings } from "./SiteSettings";
 import { Textarea } from "../ui/textarea";
 import {
@@ -51,8 +51,7 @@ export function SettingsManagement() {
   const [notificationSettings, setNotificationSettings] = useState({
     smsEnabled: false,
     apiKey: '',
-    senderId: '',
-    route: 'transactional' as 'transactional' | 'promotional',
+    route: 'promotional' as 'transactional' | 'promotional',
     adminPhone: '+91 98765 43210',
     // Notification toggles
     notifyOnNewOrder: true,
@@ -68,6 +67,26 @@ export function SettingsManagement() {
 
   const [testPhone, setTestPhone] = useState('');
   const [isTesting, setIsTesting] = useState(false);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+
+  // Load notification settings on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        setIsLoadingSettings(true);
+        const response = await api.getNotificationSettings();
+        if (response.settings) {
+          setNotificationSettings(response.settings);
+        }
+      } catch (error) {
+        console.error('Error loading notification settings:', error);
+      } finally {
+        setIsLoadingSettings(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   const handleSaveRazorpay = () => {
     updatePaymentGateway('razorpay', {
@@ -447,316 +466,257 @@ export function SettingsManagement() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                SMS & WhatsApp Notifications
+                Fast2SMS Notifications
               </CardTitle>
               <CardDescription>
-                Configure SMS and WhatsApp notifications for orders and status updates
+                Configure Fast2SMS for order notifications and status updates
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Provider Selection Guides */}
-              <div className="p-4 rounded-lg bg-muted border border-border space-y-3">
-                <p className="text-foreground">
-                  <strong>Supported Providers:</strong>
-                </p>
-                <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                  <li>
-                    <strong>Twilio:</strong> Enterprise-grade SMS & WhatsApp API (Global)
-                    <br />
-                    <a 
-                      href="https://www.twilio.com/docs/sms" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline ml-6"
-                    >
-                      Get API credentials →
-                    </a>
-                  </li>
-                  <li>
-                    <strong>MSG91:</strong> Popular Indian SMS provider with competitive rates
-                    <br />
-                    <a 
-                      href="https://msg91.com/help/MSG91/how-to-get-msg91-authkey" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline ml-6"
-                    >
-                      Get API credentials →
-                    </a>
-                  </li>
-                  <li>
-                    <strong>Textlocal:</strong> Affordable Indian SMS gateway
-                    <br />
-                    <a 
-                      href="https://www.textlocal.in/api-keys/" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline ml-6"
-                    >
-                      Get API credentials →
-                    </a>
-                  </li>
-                  <li>
-                    <strong>Custom:</strong> Use your own webhook endpoint
-                  </li>
-                </ul>
-              </div>
-
-              {/* Enable Toggles */}
-              <div className="flex items-center justify-between p-4 rounded-lg bg-card border border-border">
-                <div>
-                  <Label className="text-foreground">SMS Notifications</Label>
-                  <p className="text-muted-foreground">
-                    Send SMS to customers and admin
-                  </p>
+              {isLoadingSettings ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Loading settings...
                 </div>
-                <Switch
-                  checked={notificationSettings.smsEnabled}
-                  onCheckedChange={(checked) =>
-                    setNotificationSettings({ ...notificationSettings, smsEnabled: checked })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-lg bg-card border border-border">
-                <div>
-                  <Label className="text-foreground">WhatsApp Notifications</Label>
-                  <p className="text-muted-foreground">
-                    Send WhatsApp messages (requires Twilio Business API)
-                  </p>
-                </div>
-                <Switch
-                  checked={notificationSettings.whatsappEnabled}
-                  onCheckedChange={(checked) =>
-                    setNotificationSettings({ ...notificationSettings, whatsappEnabled: checked })
-                  }
-                />
-              </div>
-
-              {/* Provider Configuration */}
-              <div className="space-y-4">
-                <Label className="text-foreground">Provider</Label>
-                <Select
-                  value={notificationSettings.provider}
-                  onValueChange={(value) =>
-                    setNotificationSettings({ ...notificationSettings, provider: value })
-                  }
-                >
-                  <SelectTrigger className="bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="twilio">Twilio</SelectItem>
-                    <SelectItem value="msg91">MSG91</SelectItem>
-                    <SelectItem value="textlocal">Textlocal</SelectItem>
-                    <SelectItem value="custom">Custom Webhook (SMS-Gate.app)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* SMS-Gate.app Instructions - Show when Custom Webhook is selected */}
-              {notificationSettings.provider === 'custom' && (
-                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20 space-y-3">
-                  <p className="text-foreground">
-                    <strong>📱 SMS-Gate.app Setup Guide:</strong>
-                  </p>
-                  <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-                    <li>Install <strong>SMS-Gate.app</strong> on your Android device from Play Store</li>
-                    <li>Open the app and go to <strong>Settings</strong> tab</li>
-                    <li>Find your <strong>API URL</strong> (e.g., https://sms-gate.app/3rdparty/v1/message)</li>
-                    <li>Note your <strong>Username</strong> and <strong>Password</strong></li>
-                    <li>Fill the fields below:
-                      <ul className="list-disc ml-8 mt-1 space-y-1">
-                        <li><strong>Webhook URL</strong> = Your API URL from the app</li>
-                        <li><strong>API Key</strong> = Your Username</li>
-                        <li><strong>API Secret</strong> = Your Password</li>
-                        <li><strong>Device Phone Number</strong> = Your Android phone number with country code</li>
-                      </ul>
-                    </li>
-                  </ol>
-                  <div className="p-3 rounded-lg bg-background/50 border border-border">
-                    <p className="text-muted-foreground">
-                      💡 <strong>Pro tips:</strong>
+              ) : (
+                <>
+                  {/* Fast2SMS Setup Guide */}
+                  <div className="p-4 rounded-lg bg-primary/10 border border-primary/20 space-y-3">
+                    <p className="text-foreground">
+                      <strong>📱 Fast2SMS Setup Guide:</strong>
                     </p>
-                    <ul className="list-disc list-inside text-muted-foreground mt-1 space-y-1">
-                      <li>If your PrivateToken is empty, use Username/Password authentication</li>
-                      <li>Keep your phone charged and connected to internet</li>
-                      <li>Cost-effective - uses your mobile plan rates!</li>
-                    </ul>
+                    <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+                      <li>Sign up at <a href="https://www.fast2sms.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Fast2SMS.com</a></li>
+                      <li>Complete KYC verification to activate your account</li>
+                      <li>Navigate to <strong>Dev API</strong> tab in dashboard</li>
+                      <li>Copy your <strong>API Key</strong> (authorization key)</li>
+                      <li>Set up the webhook URL in Fast2SMS dashboard (optional for delivery reports):
+                        <div className="mt-2 p-2 bg-background/50 rounded border border-border">
+                          <code className="text-xs break-all">https://eorejdmwrjegmblltxtj.supabase.co/functions/v1/make-server-226dc7f7/sms-webhook</code>
+                        </div>
+                      </li>
+                    </ol>
+                    <div className="p-3 rounded-lg bg-background/50 border border-border">
+                      <p className="text-muted-foreground">
+                        💡 <strong>Pro tips:</strong>
+                      </p>
+                      <ul className="list-disc list-inside text-muted-foreground mt-1 space-y-1">
+                        <li><strong>Promotional route</strong> - Lower cost, no DLT registration needed for testing</li>
+                        <li><strong>Transactional route</strong> - Higher reliability, requires DLT registration for production</li>
+                        <li>Start with promotional route for testing, switch to transactional for production</li>
+                      </ul>
+                    </div>
                   </div>
-                </div>
-              )}
 
-              <div>
-                <Label>API Key {notificationSettings.provider === 'custom' && <span className="text-muted-foreground">(Username for SMS-Gate.app)</span>}</Label>
-                <Input
-                  type="text"
-                  placeholder={notificationSettings.provider === 'custom' ? 'Username' : 'API Key'}
-                  value={notificationSettings.apiKey}
-                  onChange={(e) =>
-                    setNotificationSettings({ ...notificationSettings, apiKey: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label>API Secret {notificationSettings.provider === 'custom' && <span className="text-muted-foreground">(Password for SMS-Gate.app)</span>}</Label>
-                <Input
-                  type="password"
-                  placeholder={notificationSettings.provider === 'custom' ? 'Password' : 'API Secret'}
-                  value={notificationSettings.apiSecret}
-                  onChange={(e) =>
-                    setNotificationSettings({ ...notificationSettings, apiSecret: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Sender ID</Label>
-                <Input
-                  type="text"
-                  placeholder="Sender ID"
-                  value={notificationSettings.senderId}
-                  onChange={(e) =>
-                    setNotificationSettings({ ...notificationSettings, senderId: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Webhook URL</Label>
-                <Input
-                  type="text"
-                  placeholder="Webhook URL"
-                  value={notificationSettings.webhookUrl}
-                  onChange={(e) =>
-                    setNotificationSettings({ ...notificationSettings, webhookUrl: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Device Phone Number (Android Phone)</Label>
-                <Input
-                  type="tel"
-                  placeholder="+91 98765 43210"
-                  value={notificationSettings.devicePhoneNumber}
-                  onChange={(e) =>
-                    setNotificationSettings({ ...notificationSettings, devicePhoneNumber: e.target.value })
-                  }
-                />
-                <p className="text-muted-foreground mt-1">
-                  The phone number of your Android device running SMS-Gate.app (with country code)
-                </p>
-              </div>
-              <div>
-                <Label>Admin Phone</Label>
-                <Input
-                  type="tel"
-                  placeholder="Admin Phone"
-                  value={notificationSettings.adminPhone}
-                  onChange={(e) =>
-                    setNotificationSettings({ ...notificationSettings, adminPhone: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Notifications</Label>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={notificationSettings.notifyOnNewOrder}
-                    onCheckedChange={(checked) =>
-                      setNotificationSettings({ ...notificationSettings, notifyOnNewOrder: checked })
-                    }
-                  />
-                  <Label>Notify on New Order</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={notificationSettings.notifyOnStatusChange}
-                    onCheckedChange={(checked) =>
-                      setNotificationSettings({ ...notificationSettings, notifyOnStatusChange: checked })
-                    }
-                  />
-                  <Label>Notify on Status Change</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={notificationSettings.notifyAdminOnOrder}
-                    onCheckedChange={(checked) =>
-                      setNotificationSettings({ ...notificationSettings, notifyAdminOnOrder: checked })
-                    }
-                  />
-                  <Label>Notify Admin on Order</Label>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Message Templates</Label>
-                <div>
-                  <Label>Order Placed Template</Label>
-                  <Textarea
-                    value={notificationSettings.orderPlacedTemplate}
-                    onChange={(e) =>
-                      setNotificationSettings({ ...notificationSettings, orderPlacedTemplate: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Order Shipped Template</Label>
-                  <Textarea
-                    value={notificationSettings.orderShippedTemplate}
-                    onChange={(e) =>
-                      setNotificationSettings({ ...notificationSettings, orderShippedTemplate: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Order Delivered Template</Label>
-                  <Textarea
-                    value={notificationSettings.orderDeliveredTemplate}
-                    onChange={(e) =>
-                      setNotificationSettings({ ...notificationSettings, orderDeliveredTemplate: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Order Cancelled Template</Label>
-                  <Textarea
-                    value={notificationSettings.orderCancelledTemplate}
-                    onChange={(e) =>
-                      setNotificationSettings({ ...notificationSettings, orderCancelledTemplate: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Admin Order Template</Label>
-                  <Textarea
-                    value={notificationSettings.adminOrderTemplate}
-                    onChange={(e) =>
-                      setNotificationSettings({ ...notificationSettings, adminOrderTemplate: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Test Notification</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="tel"
-                    placeholder="Test Phone Number"
-                    value={testPhone}
-                    onChange={(e) => setTestPhone(e.target.value)}
-                  />
-                  <Button
-                    onClick={handleTestNotification}
-                    disabled={isTesting}
-                    className="w-full"
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    {isTesting ? 'Sending...' : 'Send Test Notification'}
+                  {/* Enable SMS */}
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-card border border-border">
+                    <div>
+                      <Label className="text-foreground">Enable SMS Notifications</Label>
+                      <p className="text-muted-foreground">
+                        Send SMS to customers and admin for orders
+                      </p>
+                    </div>
+                    <Switch
+                      checked={notificationSettings.smsEnabled}
+                      onCheckedChange={(checked) =>
+                        setNotificationSettings({ ...notificationSettings, smsEnabled: checked })
+                      }
+                    />
+                  </div>
+
+                  {/* API Key */}
+                  <div>
+                    <Label>Fast2SMS API Key (Authorization Key)</Label>
+                    <Input
+                      type="text"
+                      placeholder="Paste your Fast2SMS API Key here"
+                      value={notificationSettings.apiKey}
+                      onChange={(e) =>
+                        setNotificationSettings({ ...notificationSettings, apiKey: e.target.value })
+                      }
+                    />
+                    <p className="text-muted-foreground mt-1">
+                      Get this from Fast2SMS Dashboard → Dev API → Authorization
+                    </p>
+                  </div>
+
+                  {/* Route Selection */}
+                  <div>
+                    <Label>SMS Route</Label>
+                    <Select
+                      value={notificationSettings.route}
+                      onValueChange={(value: 'transactional' | 'promotional') =>
+                        setNotificationSettings({ ...notificationSettings, route: value })
+                      }
+                    >
+                      <SelectTrigger className="bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="promotional">Promotional (Testing/Lower Cost)</SelectItem>
+                        <SelectItem value="transactional">Transactional (Production/DLT Required)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-muted-foreground mt-1">
+                      {notificationSettings.route === 'promotional' 
+                        ? '💰 Promotional: Best for testing, lower cost, no DLT needed'
+                        : '✅ Transactional: Production-ready, requires DLT registration'
+                      }
+                    </p>
+                  </div>
+
+                  {/* Admin Phone */}
+                  <div>
+                    <Label>Admin Phone Number</Label>
+                    <Input
+                      type="tel"
+                      placeholder="+91 98765 43210"
+                      value={notificationSettings.adminPhone}
+                      onChange={(e) =>
+                        setNotificationSettings({ ...notificationSettings, adminPhone: e.target.value })
+                      }
+                    />
+                    <p className="text-muted-foreground mt-1">
+                      Receive order notifications on this number (with country code)
+                    </p>
+                  </div>
+
+                  {/* Notification Toggles */}
+                  <div className="space-y-3">
+                    <Label>Notification Preferences</Label>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+                        <Switch
+                          checked={notificationSettings.notifyOnNewOrder}
+                          onCheckedChange={(checked) =>
+                            setNotificationSettings({ ...notificationSettings, notifyOnNewOrder: checked })
+                          }
+                        />
+                        <Label>Notify customer on new order placement</Label>
+                      </div>
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+                        <Switch
+                          checked={notificationSettings.notifyOnStatusChange}
+                          onCheckedChange={(checked) =>
+                            setNotificationSettings({ ...notificationSettings, notifyOnStatusChange: checked })
+                          }
+                        />
+                        <Label>Notify customer on order status changes</Label>
+                      </div>
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+                        <Switch
+                          checked={notificationSettings.notifyAdminOnOrder}
+                          onCheckedChange={(checked) =>
+                            setNotificationSettings({ ...notificationSettings, notifyAdminOnOrder: checked })
+                          }
+                        />
+                        <Label>Notify admin when new orders are placed</Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Message Templates */}
+                  <div className="space-y-4">
+                    <Label>Message Templates</Label>
+                    <p className="text-muted-foreground">
+                      Use variables: {'{customerName}'}, {'{orderId}'}, {'{amount}'}, {'{storeName}'}, {'{trackingUrl}'}
+                    </p>
+                    
+                    <div>
+                      <Label>Order Placed Template</Label>
+                      <Textarea
+                        placeholder="Hi {customerName}, your order #{orderId} has been placed!"
+                        value={notificationSettings.orderPlacedTemplate}
+                        onChange={(e) =>
+                          setNotificationSettings({ ...notificationSettings, orderPlacedTemplate: e.target.value })
+                        }
+                        className="min-h-[80px]"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Order Shipped Template</Label>
+                      <Textarea
+                        placeholder="Hi {customerName}, your order #{orderId} has been shipped!"
+                        value={notificationSettings.orderShippedTemplate}
+                        onChange={(e) =>
+                          setNotificationSettings({ ...notificationSettings, orderShippedTemplate: e.target.value })
+                        }
+                        className="min-h-[80px]"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Order Delivered Template</Label>
+                      <Textarea
+                        placeholder="Hi {customerName}, your order #{orderId} has been delivered!"
+                        value={notificationSettings.orderDeliveredTemplate}
+                        onChange={(e) =>
+                          setNotificationSettings({ ...notificationSettings, orderDeliveredTemplate: e.target.value })
+                        }
+                        className="min-h-[80px]"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Order Cancelled Template</Label>
+                      <Textarea
+                        placeholder="Hi {customerName}, your order #{orderId} has been cancelled."
+                        value={notificationSettings.orderCancelledTemplate}
+                        onChange={(e) =>
+                          setNotificationSettings({ ...notificationSettings, orderCancelledTemplate: e.target.value })
+                        }
+                        className="min-h-[80px]"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Admin Order Notification Template</Label>
+                      <Textarea
+                        placeholder="New Order! #{orderId} - ₹{amount} from {customerName}"
+                        value={notificationSettings.adminOrderTemplate}
+                        onChange={(e) =>
+                          setNotificationSettings({ ...notificationSettings, adminOrderTemplate: e.target.value })
+                        }
+                        className="min-h-[80px]"
+                      />
+                      <p className="text-muted-foreground mt-1">
+                        Additional variable: {'{customerPhone}'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Test Notification */}
+                  <div className="space-y-2 p-4 rounded-lg bg-muted border border-border">
+                    <Label>Test Notification</Label>
+                    <p className="text-muted-foreground mb-3">
+                      Send a test SMS to verify your configuration
+                    </p>
+                    <div className="flex gap-2">
+                      <Input
+                        type="tel"
+                        placeholder="+91 9876543210"
+                        value={testPhone}
+                        onChange={(e) => setTestPhone(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button
+                        onClick={handleTestNotification}
+                        disabled={isTesting || !testPhone || !notificationSettings.apiKey}
+                        variant="outline"
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        {isTesting ? 'Sending...' : 'Send Test'}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <Button onClick={handleSaveNotificationSettings} className="w-full">
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Notification Settings
                   </Button>
-                </div>
-              </div>
-              <Button onClick={handleSaveNotificationSettings} className="w-full">
-                <Save className="h-4 w-4 mr-2" />
-                Save Notification Settings
-              </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

@@ -4,7 +4,7 @@ import * as kv from './kv_store.tsx';
 interface NotificationSettings {
   smsEnabled: boolean;
   apiKey: string;
-  senderId: string;
+  route: 'transactional' | 'promotional'; // Fast2SMS routes
   adminPhone: string;
   notifyOnNewOrder: boolean;
   notifyOnStatusChange: boolean;
@@ -14,7 +14,6 @@ interface NotificationSettings {
   orderDeliveredTemplate: string;
   orderCancelledTemplate: string;
   adminOrderTemplate: string;
-  route: 'transactional' | 'promotional'; // Fast2SMS routes
 }
 
 // Template variable replacement
@@ -35,8 +34,7 @@ async function sendViaFast2SMS(
   phone: string,
   message: string,
   apiKey: string,
-  senderId: string,
-  route: 'transactional' | 'promotional' = 'transactional'
+  route: 'transactional' | 'promotional' = 'promotional'
 ): Promise<boolean> {
   try {
     // Fast2SMS API endpoint
@@ -48,34 +46,35 @@ async function sendViaFast2SMS(
       cleanPhone = cleanPhone.substring(2);
     }
 
-    // Prepare request body based on route
+    // Prepare request body
     const body: any = {
-      authorization: apiKey,
-      route: route,
+      route: route, // 'transactional' or 'promotional'
       numbers: cleanPhone,
       message: message,
       flash: 0, // 0 = normal SMS, 1 = flash SMS
+      language: 'english',
     };
-
-    // Add sender ID for transactional route
-    if (route === 'transactional') {
-      body.sender_id = senderId;
-    }
 
     // Convert to URL-encoded format
     const formData = new URLSearchParams(body);
+
+    console.log('Sending Fast2SMS request:', { route, numbers: cleanPhone, messageLength: message.length });
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'authorization': apiKey, // Fast2SMS uses authorization header
       },
       body: formData.toString(),
     });
 
     const responseData = await response.json();
 
+    console.log('Fast2SMS response:', responseData);
+
     // Check if the request was successful
+    // Fast2SMS returns { "return": true, "request_id": "...", "message": [...] }
     if (!response.ok || !responseData.return) {
       console.error('Fast2SMS error:', responseData);
       return false;
@@ -100,14 +99,14 @@ export async function sendNotification(
     return false;
   }
 
-  const { apiKey, senderId, route } = settings;
+  const { apiKey, route } = settings;
 
   if (!apiKey) {
     console.error('Fast2SMS API key not configured');
     return false;
   }
 
-  return await sendViaFast2SMS(phone, message, apiKey, senderId, route);
+  return await sendViaFast2SMS(phone, message, apiKey, route);
 }
 
 // Send order placed notification
