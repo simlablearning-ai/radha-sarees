@@ -60,6 +60,10 @@ interface ProductFormData {
 
 export function ProductManagement() {
   const { products } = useStore();
+  
+  // Ensure products is always an array to prevent crashes
+  const safeProducts = Array.isArray(products) ? products : [];
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
@@ -410,7 +414,7 @@ export function ProductManagement() {
 
       // Prepare updates for all selected products
       const updatePromises = selectedProducts.map(async (id) => {
-        const product = products.find(p => p.id === id);
+        const product = safeProducts.find(p => p.id === id);
         if (!product) return;
 
         const productUpdates = { ...updates };
@@ -576,9 +580,13 @@ export function ProductManagement() {
     }
   };
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
+  const filteredProducts = safeProducts.filter(product => {
+    if (!product) return false;
+    const productName = product.name || "";
+    const productCategory = product.category || "";
+    
+    const matchesSearch = productName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === "all" || productCategory === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
@@ -1348,14 +1356,14 @@ export function ProductManagement() {
                         </TableCell>
                         <TableCell>
                           <ImageWithFallback
-                            src={product.image}
-                            alt={product.name}
+                            src={product.image || ''}
+                            alt={product.name || 'Product'}
                             className="h-16 w-16 object-cover rounded"
                           />
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="text-foreground">{product.name}</p>
+                            <p className="text-foreground font-medium">{product.name || 'Unnamed Product'}</p>
                             {product.description && (
                               <p className="text-muted-foreground text-sm line-clamp-1">
                                 {product.description}
@@ -1364,15 +1372,15 @@ export function ProductManagement() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary">{product.category}</Badge>
+                          <Badge variant="secondary">{product.category || 'Uncategorized'}</Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {weight || "—"}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
-                            <span className="text-foreground">₹{product.price.toLocaleString('en-IN')}</span>
-                            {originalPrice && originalPrice > product.price && (
+                            <span className="text-foreground font-medium">₹{(product.price || 0).toLocaleString('en-IN')}</span>
+                            {originalPrice && originalPrice > (product.price || 0) && (
                               <span className="text-muted-foreground text-sm line-through">
                                 ₹{originalPrice.toLocaleString('en-IN')}
                               </span>
