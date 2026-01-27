@@ -41,36 +41,41 @@ export function useDataSync() {
         setIsLoading(true);
         console.log('Starting data initialization...');
         
-        // Load products from server
-        const productsData = await api.getProducts();
-        console.log('Loaded products from server:', productsData);
-        if (productsData.products) {
+        // Helper to safely fetch data without throwing
+        async function safeFetch<T>(fetcher: () => Promise<T>, fallbackName: string): Promise<T | null> {
+          try {
+            return await fetcher();
+          } catch (error) {
+            console.warn(`Failed to load ${fallbackName} from server:`, error);
+            return null;
+          }
+        }
+        
+        // Load products
+        const productsData = await safeFetch<{products: any[]}>(() => api.getProducts(), 'products');
+        if (productsData?.products) {
           useStore.setState({ products: productsData.products });
         }
         
-        // Load orders from server
-        const ordersData = await api.getOrders();
-        console.log('Loaded orders from server:', ordersData);
-        if (ordersData.orders) {
+        // Load orders
+        const ordersData = await safeFetch<{orders: any[]}>(() => api.getOrders(), 'orders');
+        if (ordersData?.orders) {
           useStore.setState({ orders: ordersData.orders });
         }
         
         // Load settings
-        const settingsData = await api.getSiteSettings();
-        console.log('Loaded site settings from server:', settingsData);
-        if (settingsData.settings) {
+        const settingsData = await safeFetch<{settings: any}>(() => api.getSiteSettings(), 'settings');
+        if (settingsData?.settings) {
           useStore.setState({ siteSettings: settingsData.settings });
         }
         
-        const gatewaysData = await api.getPaymentGateways();
-        console.log('Loaded payment gateways from server:', gatewaysData);
-        if (gatewaysData.gateways) {
+        const gatewaysData = await safeFetch<{gateways: any[]}>(() => api.getPaymentGateways(), 'payment gateways');
+        if (gatewaysData?.gateways) {
           useStore.setState({ paymentGateways: gatewaysData.gateways });
         }
         
-        const reportsData = await api.getReports();
-        console.log('Loaded reports from server:', reportsData);
-        if (reportsData.reports) {
+        const reportsData = await safeFetch<{reports: any[]}>(() => api.getReports(), 'reports');
+        if (reportsData?.reports) {
           useStore.setState({ reports: reportsData.reports });
         }
         
@@ -79,9 +84,11 @@ export function useDataSync() {
         console.log('Checking for existing session token:', !!token);
         if (token) {
           try {
-            const sessionData = await api.getSession();
+            // We can't easily wrap this in safeFetch because it has specific logic
+            // But we can wrap the inner call
+            const sessionData = await api.getSession().catch(() => null);
             console.log('Session data:', sessionData);
-            if (sessionData.profile) {
+            if (sessionData?.profile) {
               useStore.setState({
                 isCustomerAuthenticated: true,
                 currentCustomer: sessionData.profile,
@@ -89,6 +96,9 @@ export function useDataSync() {
               
               // Load customer-specific data
               await loadCustomerData();
+            } else if (!sessionData) {
+               // Token might be invalid or server down
+               console.warn('Session check failed or server unreachable');
             }
           } catch (error) {
             console.error('Session validation failed:', error);
@@ -97,12 +107,14 @@ export function useDataSync() {
           }
         }
         
-        setIsInitialized(true);
         console.log('Data initialization complete!');
       } catch (error) {
-        console.error('Failed to initialize data:', error);
-        toast.error('Failed to load data from server. Please check console.');
+        console.error('Unexpected error during initialization:', error);
+        if (error instanceof Error && error.message !== 'Failed to fetch') {
+             toast.error('Failed to initialize application data');
+        }
       } finally {
+        setIsInitialized(true);
         setIsLoading(false);
       }
     };

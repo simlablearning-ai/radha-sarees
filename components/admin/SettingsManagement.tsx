@@ -491,7 +491,7 @@ export function SettingsManagement() {
                       <li>Copy your <strong>API Key</strong> (authorization key)</li>
                       <li>Set up the webhook URL in Fast2SMS dashboard (optional for delivery reports):
                         <div className="mt-2 p-2 bg-background/50 rounded border border-border">
-                          <code className="text-xs break-all">https://eorejdmwrjegmblltxtj.supabase.co/functions/v1/make-server-226dc7f7/sms-webhook</code>
+                          <code className="text-xs break-all">https://idlwcefmmisueqvzwlrf.supabase.co/functions/v1/make-server-226dc7f7/sms-webhook</code>
                         </div>
                       </li>
                     </ol>

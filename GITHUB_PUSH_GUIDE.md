@@ -59,12 +59,12 @@ git push -u origin main
 After pushing to GitHub and connecting to Vercel, add these environment variables in Vercel Dashboard:
 
 ```bash
-VITE_SUPABASE_URL=https://eorejdmwrjegmblltxtj.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvcmVqZG13cmplZ21ibGx0eHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzMTk2ODYsImV4cCI6MjA3ODg5NTY4Nn0.laLWdu-sgqh2e6QmI-V2PhpZxsoYJ9c01kh9bjq0EK8
+VITE_SUPABASE_URL=https://idlwcefmmisueqvzwlrf.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkbHdjZWZtbWlzdWVxdnp3bHJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyNjI1NDIsImV4cCI6MjA4MjgzODU0Mn0.UdgzsRvdcBElH8MZUxkWMMy4WgzLLaAtxnJBCCmjd4k
 ```
 
 **Note:** These values are already in your Supabase project and can be found at:
-https://supabase.com/dashboard/project/eorejdmwrjegmblltxtj/settings/api
+https://supabase.com/dashboard/project/idlwcefmmisueqvzwlrf/settings/api
 
 ### For Netlify Deployment:
 Same environment variables as Vercel above, but add them in Netlify Dashboard.
