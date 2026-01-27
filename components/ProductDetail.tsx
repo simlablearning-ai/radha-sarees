@@ -75,7 +75,19 @@ export function ProductDetail({
   const mainImage = (currentVariation?.image && currentVariation.image.trim()) 
     ? currentVariation.image 
     : product.image;
-  const images = [mainImage, mainImage, mainImage, mainImage]; // In real app, product would have multiple images
+    
+  // Create a gallery of images. 
+  // In a real app with multiple images per product, we would merge product.images and variation.images.
+  // For now, we'll create a gallery that includes the main image and potentially others if they existed.
+  // We keep the logic simple: 4 slots, all showing the current main image to simulate a gallery
+  // until we add support for multiple images per product/variation in the backend.
+  const images = [mainImage, mainImage, mainImage, mainImage]; 
+
+  // Reset selected image index when variation changes to ensure we show the new image
+  const handleVariationSelect = (variationId: string) => {
+    setSelectedVariation(variationId);
+    setSelectedImage(0); 
+  };
 
   const handleQuantityChange = (delta: number) => {
     const newQuantity = quantity + delta;
@@ -223,7 +235,7 @@ export function ProductDetail({
                       return (
                         <button
                           key={variation.id}
-                          onClick={() => !isOutOfStock && setSelectedVariation(variation.id)}
+                          onClick={() => !isOutOfStock && handleVariationSelect(variation.id)}
                           disabled={isOutOfStock}
                           className={`px-4 py-2 rounded-lg border-2 transition-all ${
                             isSelected

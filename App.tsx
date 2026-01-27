@@ -227,17 +227,23 @@ export default function App() {
         ? prev.find(item => item.id === product.id && item.selectedVariation?.id === variationId)
         : prev.find(item => item.id === product.id && !item.selectedVariation);
       
+      // Use variation image if available, otherwise fallback to product image
+      const itemImage = (variation?.image && variation.image.trim()) 
+        ? variation.image 
+        : product.image;
+
       if (existingItem) {
         return prev.map(item =>
           (variation 
             ? (item.id === product.id && item.selectedVariation?.id === variationId)
             : (item.id === product.id && !item.selectedVariation))
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: item.quantity + quantity, image: itemImage }
             : item
         );
       } else {
         const cartItem: CartItem = {
           ...product,
+          image: itemImage, // Use the correct image here
           quantity,
           ...(variation && {
             selectedVariation: {
