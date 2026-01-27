@@ -255,6 +255,49 @@ export function ProductManagement() {
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.csv')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setBulkCSV(event.target.result as string);
+          toast.success("CSV file loaded!");
+        }
+      };
+      reader.readAsText(file);
+    } else {
+      toast.error("Please drop a valid CSV file");
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setBulkCSV(event.target.result as string);
+          toast.success("CSV file loaded!");
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
   // Improved CSV Parser that handles quoted strings and newlines correctly
   const parseCSV = (text: string) => {
     const result: string[][] = [];
