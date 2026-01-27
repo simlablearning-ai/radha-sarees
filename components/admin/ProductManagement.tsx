@@ -1024,21 +1024,23 @@ export function ProductManagement() {
                       <Switch
                         checked={formData.hasVariations}
                         onCheckedChange={(checked) => {
-                          if (checked && formData.variations.length === 0) {
-                            // Add first variation by default
-                            setFormData({ 
-                              ...formData, 
-                              hasVariations: checked,
-                              variations: [{
-                                id: Date.now().toString(),
-                                color: '',
-                                stock: 0,
-                                priceAdjustment: 0,
-                                image: ''
-                              }]
-                            });
+                          const currentVariations = formData.variations || [];
+                          if (checked && currentVariations.length === 0) {
+                             // Add first variation by default when enabling
+                             setFormData({ 
+                               ...formData, 
+                               hasVariations: checked,
+                               variations: [{
+                                 id: Date.now().toString(),
+                                 color: '',
+                                 stock: 0,
+                                 priceAdjustment: 0,
+                                 image: ''
+                               }]
+                             });
                           } else {
-                            setFormData({ ...formData, hasVariations: checked });
+                             // Just toggle, keeping existing variations if any
+                             setFormData({ ...formData, hasVariations: checked });
                           }
                         }}
                       />
@@ -1046,9 +1048,9 @@ export function ProductManagement() {
                   </div>
 
                   {formData.hasVariations && (
-                    <div className="space-y-3">
-                      {formData.variations.map((variation, index) => (
-                        <div key={variation.id} className="p-3 bg-background border border-border rounded-lg space-y-3">
+                    <div className="space-y-3 pt-2">
+                      {(formData.variations || []).map((variation, index) => (
+                        <div key={variation.id} className="p-4 bg-card border border-border rounded-lg space-y-4 shadow-sm">
                           <div className="flex items-center justify-between">
                             <Label className="text-sm">Color Variation {index + 1}</Label>
                             {formData.variations.length > 1 && (
@@ -1688,8 +1690,9 @@ export function ProductManagement() {
                   <Switch
                     checked={formData.hasVariations}
                     onCheckedChange={(checked) => {
-                      if (checked && formData.variations.length === 0) {
-                        // Add first variation by default
+                      const currentVariations = formData.variations || [];
+                      if (checked && currentVariations.length === 0) {
+                        // Add first variation by default when enabling
                         setFormData({ 
                           ...formData, 
                           hasVariations: checked,
@@ -1702,6 +1705,7 @@ export function ProductManagement() {
                           }]
                         });
                       } else {
+                        // Just toggle, keeping existing variations if any
                         setFormData({ ...formData, hasVariations: checked });
                       }
                     }}
@@ -1710,9 +1714,9 @@ export function ProductManagement() {
               </div>
 
               {formData.hasVariations && (
-                <div className="space-y-3">
-                  {formData.variations.map((variation, index) => (
-                    <div key={variation.id} className="p-3 bg-background border border-border rounded-lg space-y-3">
+                <div className="space-y-3 pt-2">
+                  {(formData.variations || []).map((variation, index) => (
+                    <div key={variation.id} className="p-4 bg-card border border-border rounded-lg space-y-4 shadow-sm">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm">Color Variation {index + 1}</Label>
                         {formData.variations.length > 1 && (
