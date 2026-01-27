@@ -105,14 +105,16 @@ export function Hero() {
         />
       )}
       
-      {/* Background Overlay */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          backgroundColor: overlayColor,
-          opacity: overlayOpacity,
-        }}
-      />
+      {/* Background Overlay - Only show if there is a background image */}
+      {customBackgroundImage && (
+        <div 
+          className="absolute inset-0"
+          style={{
+            backgroundColor: overlayColor,
+            opacity: overlayOpacity,
+          }}
+        />
+      )}
       
       {/* Decorative Elements */}
       <div className="absolute top-20 right-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
@@ -123,7 +125,7 @@ export function Hero() {
           {/* Left Panel - Tagline */}
           <div className={showCategories ? 'text-left' : 'text-center'}>
             <h1 
-              className="text-white drop-shadow-lg"
+              className="text-primary drop-shadow-sm"
               style={{
                 fontFamily: 'var(--font-family-script)',
                 fontSize: 'clamp(2.5rem, 6vw, 5rem)',

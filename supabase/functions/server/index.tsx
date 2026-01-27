@@ -160,18 +160,51 @@ app.get("/make-server-226dc7f7/auth/session", async (c) => {
   }
 });
 
-// Admin login (simple)
+// Admin login
 app.post("/make-server-226dc7f7/auth/admin-login", async (c) => {
   try {
     const { username, password } = await c.req.json();
 
-    if (username === 'admin' && password === 'admin123') {
-      return c.json({ success: true });
+    // Check KV for custom admin credentials
+    const adminCreds = await kv.get('admin_credentials');
+    
+    if (adminCreds) {
+      if (username === adminCreds.username && password === adminCreds.password) {
+        return c.json({ success: true });
+      }
+    } else {
+      // Default fallback
+      if (username === 'admin' && password === 'admin123') {
+        return c.json({ success: true });
+      }
     }
 
     return c.json({ error: "Invalid credentials" }, 401);
   } catch (error) {
     console.log('Admin login error:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+// Change admin password
+app.post("/make-server-226dc7f7/auth/admin-password", async (c) => {
+  try {
+    const { currentPassword, newPassword } = await c.req.json();
+    
+    // Check current password
+    const adminCreds = await kv.get('admin_credentials');
+    const currentValid = adminCreds 
+      ? (currentPassword === adminCreds.password) 
+      : (currentPassword === 'admin123');
+      
+    if (!currentValid) {
+       return c.json({ error: "Current password incorrect" }, 401);
+    }
+    
+    await kv.set('admin_credentials', { username: 'admin', password: newPassword });
+    return c.json({ success: true });
+  } catch (error) {
+    console.log('Change admin password error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
 });

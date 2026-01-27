@@ -238,79 +238,95 @@ export function ProductManagement() {
     }
     
     if (confirm(`Delete ${selectedProducts.length} selected products?`)) {
-      for (const id of selectedProducts) {
-        await syncedActions.deleteProduct(id);
+      try {
+        // Use Promise.all to delete in parallel and ensure all complete
+        const deletePromises = selectedProducts.map(id => syncedActions.deleteProduct(id));
+        await Promise.all(deletePromises);
+        toast.success(`${selectedProducts.length} products deleted!`);
+        setSelectedProducts([]);
+      } catch (error) {
+        console.error("Bulk delete error:", error);
+        toast.error("Some products could not be deleted. Please try again.");
       }
-      toast.success(`${selectedProducts.length} products deleted!`);
-      setSelectedProducts([]);
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.name.endsWith('.csv')) {
-        toast.error("Please upload a CSV file");
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const csvContent = event.target?.result as string;
-        setBulkCSV(csvContent);
-        processCSV(csvContent);
-      };
-      reader.readAsText(file);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
+  // Improved CSV Parser that handles quoted strings and newlines correctly
+  const parseCSV = (text: string) => {
+    const result: string[][] = [];
+    let row: string[] = [];
+    let inQuote = false;
+    let currentToken = '';
     
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      if (!file.name.endsWith('.csv')) {
-        toast.error("Please upload a CSV file");
-        return;
-      }
+    // Normalize newlines
+    const normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    
+    for (let i = 0; i < normalizedText.length; i++) {
+      const char = normalizedText[i];
+      const nextChar = normalizedText[i + 1];
       
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const csvContent = event.target?.result as string;
-        setBulkCSV(csvContent);
-        processCSV(csvContent);
-      };
-      reader.readAsText(file);
+      if (inQuote) {
+        if (char === '"' && nextChar === '"') {
+          currentToken += '"';
+          i++; // Skip the escaped quote
+        } else if (char === '"') {
+          inQuote = false;
+        } else {
+          currentToken += char;
+        }
+      } else {
+        if (char === '"') {
+          inQuote = true;
+        } else if (char === ',') {
+          row.push(currentToken.trim());
+          currentToken = '';
+        } else if (char === '\n') {
+          row.push(currentToken.trim());
+          if (row.length > 0 && (row.length > 1 || row[0] !== '')) {
+             result.push(row);
+          }
+          row = [];
+          currentToken = '';
+        } else {
+          currentToken += char;
+        }
+      }
     }
+    
+    // Push the last token/row if exists
+    if (currentToken || row.length > 0) {
+      row.push(currentToken.trim());
+      if (row.length > 0) {
+        result.push(row);
+      }
+    }
+    
+    return result;
   };
 
   const processCSV = async (csvContent: string) => {
     try {
-      const lines = csvContent.trim().split('\n');
-      if (lines.length < 2) {
-        toast.error("CSV must have header and at least one product");
+      const parsedRows = parseCSV(csvContent);
+      
+      if (parsedRows.length < 2) {
+        toast.error("CSV must have header and at least one product row");
         return;
       }
 
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const headers = parsedRows[0].map(h => h.trim().toLowerCase());
       const products = [];
 
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+      for (let i = 1; i < parsedRows.length; i++) {
+        const values = parsedRows[i];
+        
+        // Skip empty rows
+        if (values.length === 0 || (values.length === 1 && values[0] === '')) continue;
+
         const product: any = {};
         
         headers.forEach((header, index) => {
-          const value = values[index];
+          // Handle case where row might have fewer columns than header
+          const value = index < values.length ? values[index] : '';
           
           // Map CSV headers to correct product property names
           let propertyName = header;
@@ -318,26 +334,29 @@ export function ProductManagement() {
           if (header === 'instock') propertyName = 'inStock';
           if (header === 'hasvariations') propertyName = 'hasVariations';
           
-          if (header === 'price' || header === 'originalprice' || header === 'stock' || header === 'rating' || header === 'reviews') {
-            product[propertyName] = Number(value) || 0;
-          } else if (header === 'instock' || header === 'hasvariations') {
-            product[propertyName] = value.toLowerCase() === 'true' || value === '1';
-          } else if (header === 'tags') {
-            product[propertyName] = value ? value.split(';').map(t => t.trim()) : [];
-          } else if (header === 'variations') {
-            // Parse color variations: color:stock:priceAdjustment:imageURL|color:stock:priceAdjustment:imageURL
+          if (['price', 'originalPrice', 'stock', 'rating', 'reviews'].includes(propertyName)) {
+            // Remove currency symbols or commas if present
+            const numericVal = value.replace(/[₹$,]/g, '');
+            product[propertyName] = Number(numericVal) || 0;
+          } else if (propertyName === 'inStock' || propertyName === 'hasVariations') {
+            const lowerVal = value.toLowerCase();
+            product[propertyName] = lowerVal === 'true' || lowerVal === '1' || lowerVal === 'yes';
+          } else if (propertyName === 'tags') {
+            product[propertyName] = value ? value.split(';').map(t => t.trim()).filter(t => t) : [];
+          } else if (propertyName === 'variations') {
+            // Parse color variations: color:stock:priceAdjustment:imageURL|...
             if (value && value.trim()) {
               const variationStrings = value.split('|');
               product[propertyName] = variationStrings.map((varStr, idx) => {
                 const parts = varStr.split(':');
                 return {
-                  id: `${Date.now()}-${idx}`,
+                  id: `${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 9)}`,
                   color: parts[0] || '',
                   stock: Number(parts[1]) || 0,
                   priceAdjustment: Number(parts[2]) || 0,
                   image: parts[3] || ''
                 };
-              }).filter(v => v.color); // Only include variations with a color name
+              }).filter(v => v.color); 
             } else {
               product[propertyName] = [];
             }
@@ -347,19 +366,35 @@ export function ProductManagement() {
         });
 
         if (product.name && product.category) {
+          // Ensure variations array exists if hasVariations is true
+          if (product.hasVariations && (!product.variations || product.variations.length === 0)) {
+             product.variations = [];
+          }
           products.push(product);
         }
       }
+      
+      if (products.length === 0) {
+        toast.error("No valid products found in CSV. Please check required columns (name, category).");
+        return;
+      }
 
-      for (const product of products) {
-        await syncedActions.addProduct(product);
+      // Use bulk add API if available, or loop
+      if (syncedActions.bulkAddProducts) {
+        await syncedActions.bulkAddProducts(products);
+      } else {
+        // Fallback to sequential add
+        for (const product of products) {
+          await syncedActions.addProduct(product);
+        }
       }
 
       toast.success(`${products.length} products uploaded successfully!`);
       setIsBulkUploadOpen(false);
       setBulkCSV("");
     } catch (error) {
-      toast.error("Error parsing CSV. Please check format.");
+      console.error("CSV Processing Error:", error);
+      toast.error("Error parsing CSV. Please check console for details.");
     }
   };
 
@@ -369,49 +404,61 @@ export function ProductManagement() {
       return;
     }
 
-    for (const id of selectedProducts) {
-      const product = products.find(p => p.id === id);
-      if (!product) continue;
-
+    try {
       const updates: any = {};
+      if (bulkEditData.category) updates.category = bulkEditData.category;
 
-      if (bulkEditData.category) {
-        updates.category = bulkEditData.category;
-      }
+      // Prepare updates for all selected products
+      const updatePromises = selectedProducts.map(async (id) => {
+        const product = products.find(p => p.id === id);
+        if (!product) return;
 
-      if (bulkEditData.priceAdjustment !== 0) {
-        if (bulkEditData.adjustmentType === 'percentage') {
-          updates.price = product.price * (1 + bulkEditData.priceAdjustment / 100);
-          if ((product as any).originalPrice) {
-            updates.originalPrice = (product as any).originalPrice * (1 + bulkEditData.priceAdjustment / 100);
-          }
-        } else {
-          updates.price = product.price + bulkEditData.priceAdjustment;
-          if ((product as any).originalPrice) {
-            updates.originalPrice = (product as any).originalPrice + bulkEditData.priceAdjustment;
+        const productUpdates = { ...updates };
+
+        // Handle price adjustment
+        if (bulkEditData.priceAdjustment !== 0) {
+          if (bulkEditData.adjustmentType === 'percentage') {
+            productUpdates.price = Math.round(product.price * (1 + bulkEditData.priceAdjustment / 100));
+            if ((product as any).originalPrice) {
+              productUpdates.originalPrice = Math.round((product as any).originalPrice * (1 + bulkEditData.priceAdjustment / 100));
+            }
+          } else {
+            productUpdates.price = product.price + bulkEditData.priceAdjustment;
+            if ((product as any).originalPrice) {
+              productUpdates.originalPrice = (product as any).originalPrice + bulkEditData.priceAdjustment;
+            }
           }
         }
-      }
 
-      if (bulkEditData.tags) {
-        const newTags = bulkEditData.tags.split(',').map(t => t.trim()).filter(t => t);
-        updates.tags = [...(product.tags || []), ...newTags];
-      }
+        // Handle tags
+        if (bulkEditData.tags) {
+          const newTags = bulkEditData.tags.split(',').map(t => t.trim()).filter(t => t);
+          // Avoid duplicates
+          const currentTags = product.tags || [];
+          const uniqueTags = [...new Set([...currentTags, ...newTags])];
+          productUpdates.tags = uniqueTags;
+        }
 
-      if (Object.keys(updates).length > 0) {
-        await syncedActions.updateProduct(id, updates);
-      }
+        if (Object.keys(productUpdates).length > 0) {
+          await syncedActions.updateProduct(id, productUpdates);
+        }
+      });
+
+      await Promise.all(updatePromises);
+
+      toast.success(`${selectedProducts.length} products updated!`);
+      setIsBulkEditOpen(false);
+      setSelectedProducts([]);
+      setBulkEditData({
+        category: "",
+        priceAdjustment: 0,
+        adjustmentType: "percentage",
+        tags: "",
+      });
+    } catch (error) {
+      console.error("Bulk edit error:", error);
+      toast.error("Failed to update some products.");
     }
-
-    toast.success(`${selectedProducts.length} products updated!`);
-    setIsBulkEditOpen(false);
-    setSelectedProducts([]);
-    setBulkEditData({
-      category: "",
-      priceAdjustment: 0,
-      adjustmentType: "percentage",
-      tags: "",
-    });
   };
 
   const handleExportCSV = () => {

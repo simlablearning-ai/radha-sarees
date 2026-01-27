@@ -88,6 +88,13 @@ class APIClient {
     });
   }
 
+  async changeAdminPassword(currentPassword: string, newPassword: string) {
+    return this.request('/auth/admin-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  }
+
   logout() {
     this.setToken(null);
   }
