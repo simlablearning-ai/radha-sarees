@@ -25,8 +25,7 @@ export function Categories({ onCategorySelect, onCategoryPageSelect }: Categorie
     { id: 'semi-silk', name: 'Semi Silk Sarees', displayName: 'Semi Silk Sarees', url: '/category/Semi%20Silk%20Sarees' },
     { id: 'cotton', name: 'Cotton Sarees', displayName: 'Cotton Sarees', url: '/category/Cotton%20Sarees' },
     { id: 'boutique', name: 'Boutique Sarees', displayName: 'Boutique Sarees', url: '/category/Boutique%20Sarees' },
-    { id: 'partywear', name: 'Party wear sarees', displayName: 'Party wear sarees', url: '/category/Party%20wear%20sarees' },
-    { id: 'under-499', name: 'Under Rs.499', displayName: 'Under Rs.499', url: '/category/Under%20Rs.499' }
+    { id: 'partywear', name: 'Party wear sarees', displayName: 'Party wear sarees', url: '/category/Party%20wear%20sarees' }
   ];
 
   // Default images for categories
@@ -34,8 +33,7 @@ export function Categories({ onCategorySelect, onCategoryPageSelect }: Categorie
     'semi-silk': 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800',
     'cotton': 'https://images.unsplash.com/photo-1692107271822-50cc09b2bf73?w=800',
     'boutique': 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800',
-    'partywear': 'https://images.unsplash.com/photo-1583391733981-12b336e93626?w=800',
-    'under-499': 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=800'
+    'partywear': 'https://images.unsplash.com/photo-1583391733981-12b336e93626?w=800'
   };
   
   // Get category images from settings
@@ -46,16 +44,11 @@ export function Categories({ onCategorySelect, onCategoryPageSelect }: Categorie
     // Count products in this category
     let count = 0;
     
-    if (cat.id === 'under-499') {
-      // Special case: count products under 499
-      count = products.filter(p => p.price < 499).length;
-    } else {
-      // Count products matching category name
-      count = products.filter(p => 
-        p.category === cat.name || 
-        (p.categories && p.categories.includes(cat.name))
-      ).length;
-    }
+    // Count products matching category name
+    count = products.filter(p => 
+      p.category === cat.name || 
+      (p.categories && p.categories.includes(cat.name))
+    ).length;
 
     // Get image from settings or use default
     const imageFromSettings = categoryImagesFromSettings.find(c => c.name === cat.name);
@@ -92,7 +85,7 @@ export function Categories({ onCategorySelect, onCategoryPageSelect }: Categorie
           </p>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {categories.map((category) => (
             <Card 
               key={category.id}

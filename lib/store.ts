@@ -403,8 +403,7 @@ export const useStore = create<StoreState>()(
           { id: 'semi-silk', name: 'Semi Silk Sarees', displayName: 'Semi Silk Sarees', url: '/category/semi-silk-sarees' },
           { id: 'cotton', name: 'Cotton Sarees', displayName: 'Cotton Sarees', url: '/category/cotton-sarees' },
           { id: 'boutique', name: 'Boutique Sarees', displayName: 'Boutique Sarees', url: '/category/boutique-sarees' },
-          { id: 'partywear', name: 'Party wear sarees', displayName: 'Party wear sarees', url: '/category/party-wear-sarees' },
-          { id: 'under-499', name: 'Under Rs.499', displayName: 'Under Rs.499', url: '/category/under-rs-499' }
+          { id: 'partywear', name: 'Party wear sarees', displayName: 'Party wear sarees', url: '/category/party-wear-sarees' }
         ]
       },
       
