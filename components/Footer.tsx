@@ -1,6 +1,5 @@
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react";
+import { Facebook, Twitter, Instagram, Youtube, Mail, MapPin } from "lucide-react";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 import { Separator } from "./ui/separator";
 
 export function Footer() {
@@ -55,28 +54,10 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Newsletter */}
+          {/* Contact Info */}
           <div>
-            <h3 className="text-sidebar-foreground mb-4">Stay Updated</h3>
-            <p className="text-sidebar-foreground/80 mb-4">
-              Subscribe to get special offers, new collections, and styling tips!
-            </p>
-            <div className="flex gap-2 mb-4">
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/50"
-              />
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                Subscribe
-              </Button>
-            </div>
-            
+            <h3 className="text-sidebar-foreground mb-4">Contact Us</h3>
             <div className="space-y-2 text-sidebar-foreground/80">
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                <span>+91 99999 88888</span>
-              </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
                 <span>info@radhasarees.com</span>

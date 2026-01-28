@@ -1812,10 +1812,6 @@
     background-color: var(--sidebar);
   }
 
-  .bg-sidebar-accent {
-    background-color: var(--sidebar-accent);
-  }
-
   .bg-sidebar-border {
     background-color: var(--sidebar-border);
   }
@@ -2617,16 +2613,6 @@
 
   .placeholder\:text-muted-foreground::placeholder {
     color: var(--muted-foreground);
-  }
-
-  .placeholder\:text-sidebar-foreground\/50::placeholder {
-    color: var(--sidebar-foreground);
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .placeholder\:text-sidebar-foreground\/50::placeholder {
-      color: color-mix(in oklab, var(--sidebar-foreground) 50%, transparent);
-    }
   }
 
   @media (hover: hover) {

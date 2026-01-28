@@ -20,20 +20,36 @@ interface CategoriesProps {
 export function Categories({ onCategorySelect, onCategoryPageSelect }: CategoriesProps) {
   const { siteSettings, products } = useStore();
   
-  // Get categories from settings or use defaults
-  const categoriesConfig = siteSettings.categories || [
+  // Define the new standard categories
+  const newCategories = [
     { id: 'festival', name: 'Festival', displayName: 'Festival Sarees', url: '/category/festival' },
     { id: 'casual', name: 'Casual', displayName: 'Casual Sarees', url: '/category/casual' },
     { id: 'ethnic', name: 'Ethnic', displayName: 'Ethnic Sarees', url: '/category/ethnic' },
     { id: 'fancy', name: 'Fancy', displayName: 'Fancy Sarees', url: '/category/fancy' }
   ];
 
+  // Get categories from settings
+  let categoriesConfig = siteSettings.categories;
+
+  // Check if we have the old legacy categories or no categories, if so, use the new defaults
+  // The old categories had names like 'Semi Silk', 'Cotton', 'Boutique', 'Party Wear'
+  const isLegacyConfig = categoriesConfig?.some(c => 
+    c.displayName.includes('Semi Silk') || 
+    c.displayName.includes('Boutique') || 
+    c.displayName.includes('Party wear')
+  );
+
+  // If settings are missing, empty, or contain legacy data, force the new configuration
+  if (!categoriesConfig || categoriesConfig.length === 0 || isLegacyConfig) {
+    categoriesConfig = newCategories;
+  }
+
   // Default images for categories
   const defaultImages: { [key: string]: string } = {
-    'festival': 'https://images.unsplash.com/photo-1758979807529-0beb03394099?w=800',
-    'casual': 'https://images.unsplash.com/photo-1601291791976-6ad855ca1a27?w=800',
-    'ethnic': 'https://images.unsplash.com/photo-1769500801394-ca7dbd6cd433?w=800',
-    'fancy': 'https://images.unsplash.com/photo-1756483492198-8ca91227489b?w=800'
+    'festival': 'https://images.unsplash.com/photo-1757693353915-78bc47214393?w=800',
+    'casual': 'https://images.unsplash.com/photo-1692107271822-50cc09b2bf73?w=800',
+    'ethnic': 'https://images.unsplash.com/photo-1760262492494-76fdcf113ebe?w=800',
+    'fancy': 'https://images.unsplash.com/photo-1761084489677-72a2f15b4557?w=800'
   };
   
   // Get category images from settings
@@ -51,8 +67,10 @@ export function Categories({ onCategorySelect, onCategoryPageSelect }: Categorie
     ).length;
 
     // Get image from settings or use default
+    // Check for both the category name and ID in the default images map
     const imageFromSettings = categoryImagesFromSettings.find(c => c.name === cat.name);
-    const image = imageFromSettings?.url || defaultImages[cat.id] || defaultImages['semi-silk'];
+    // Fallback logic: Settings -> ID match -> Name match -> default
+    const image = imageFromSettings?.url || defaultImages[cat.id] || defaultImages[cat.name.toLowerCase()] || defaultImages['festival'];
 
     return {
       id: cat.id,
