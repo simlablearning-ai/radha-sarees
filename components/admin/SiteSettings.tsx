@@ -37,10 +37,10 @@ export function SiteSettings() {
 
   // Category Customization
   const defaultCategories: CategoryConfig[] = [
-    { id: 'semi-silk', name: 'Semi Silk Sarees', displayName: 'Semi Silk Sarees', url: '/category/Semi%20Silk%20Sarees' },
-    { id: 'cotton', name: 'Cotton Sarees', displayName: 'Cotton Sarees', url: '/category/Cotton%20Sarees' },
-    { id: 'boutique', name: 'Boutique Sarees', displayName: 'Boutique Sarees', url: '/category/Boutique%20Sarees' },
-    { id: 'partywear', name: 'Party wear sarees', displayName: 'Party wear sarees', url: '/category/Party%20wear%20sarees' }
+    { id: 'festival', name: 'Festival', displayName: 'Festival Sarees', url: '/category/festival' },
+    { id: 'casual', name: 'Casual', displayName: 'Casual Sarees', url: '/category/casual' },
+    { id: 'ethnic', name: 'Ethnic', displayName: 'Ethnic Sarees', url: '/category/ethnic' },
+    { id: 'fancy', name: 'Fancy', displayName: 'Fancy Sarees', url: '/category/fancy' }
   ];
   const [categories, setCategories] = useState<CategoryConfig[]>(
     siteSettings.categories || defaultCategories
@@ -443,7 +443,7 @@ export function SiteSettings() {
                       newCategories[index].displayName = e.target.value;
                       setCategories(newCategories);
                     }}
-                    placeholder="e.g., Semi Silk Sarees"
+                    placeholder="e.g., Festival Sarees"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     This is the name shown to customers
@@ -459,7 +459,7 @@ export function SiteSettings() {
                       newCategories[index].url = e.target.value;
                       setCategories(newCategories);
                     }}
-                    placeholder="/category/Semi%20Silk%20Sarees"
+                    placeholder="/category/festival"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Category page URL (auto-generated)

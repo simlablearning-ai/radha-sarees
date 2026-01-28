@@ -3,9 +3,9 @@
 /**
  * Convert a string to a URL-friendly slug
  * Examples:
- * - "Semi Silk Sarees" -> "semi-silk-sarees"
+ * - "Festival Sarees" -> "festival-sarees"
  * - "Under Rs.499" -> "under-rs-499"
- * - "Party wear sarees" -> "party-wear-sarees"
+ * - "Fancy Sarees" -> "fancy-sarees"
  */
 export function toSlug(text: string): string {
   return text
@@ -24,6 +24,10 @@ export function toSlug(text: string): string {
 export function fromSlug(slug: string): string {
   // Common patterns to restore
   const patterns: { [key: string]: string } = {
+    'festival': 'Festival',
+    'casual': 'Casual',
+    'ethnic': 'Ethnic',
+    'fancy': 'Fancy',
     'semi-silk-sarees': 'Semi Silk Sarees',
     'cotton-sarees': 'Cotton Sarees',
     'boutique-sarees': 'Boutique Sarees',
@@ -59,7 +63,7 @@ export function extractProductId(slug: string): number | null {
 
 /**
  * Generate category URL
- * Example: "Semi Silk Sarees" -> "/category/semi-silk-sarees"
+ * Example: "Festival" -> "/category/festival"
  */
 export function toCategoryUrl(categoryName: string): string {
   return `/category/${toSlug(categoryName)}`;

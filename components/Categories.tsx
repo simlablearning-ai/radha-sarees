@@ -22,18 +22,18 @@ export function Categories({ onCategorySelect, onCategoryPageSelect }: Categorie
   
   // Get categories from settings or use defaults
   const categoriesConfig = siteSettings.categories || [
-    { id: 'semi-silk', name: 'Semi Silk Sarees', displayName: 'Semi Silk Sarees', url: '/category/Semi%20Silk%20Sarees' },
-    { id: 'cotton', name: 'Cotton Sarees', displayName: 'Cotton Sarees', url: '/category/Cotton%20Sarees' },
-    { id: 'boutique', name: 'Boutique Sarees', displayName: 'Boutique Sarees', url: '/category/Boutique%20Sarees' },
-    { id: 'partywear', name: 'Party wear sarees', displayName: 'Party wear sarees', url: '/category/Party%20wear%20sarees' }
+    { id: 'festival', name: 'Festival', displayName: 'Festival Sarees', url: '/category/festival' },
+    { id: 'casual', name: 'Casual', displayName: 'Casual Sarees', url: '/category/casual' },
+    { id: 'ethnic', name: 'Ethnic', displayName: 'Ethnic Sarees', url: '/category/ethnic' },
+    { id: 'fancy', name: 'Fancy', displayName: 'Fancy Sarees', url: '/category/fancy' }
   ];
 
   // Default images for categories
   const defaultImages: { [key: string]: string } = {
-    'semi-silk': 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800',
-    'cotton': 'https://images.unsplash.com/photo-1692107271822-50cc09b2bf73?w=800',
-    'boutique': 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800',
-    'partywear': 'https://images.unsplash.com/photo-1583391733981-12b336e93626?w=800'
+    'festival': 'https://images.unsplash.com/photo-1758979807529-0beb03394099?w=800',
+    'casual': 'https://images.unsplash.com/photo-1601291791976-6ad855ca1a27?w=800',
+    'ethnic': 'https://images.unsplash.com/photo-1769500801394-ca7dbd6cd433?w=800',
+    'fancy': 'https://images.unsplash.com/photo-1756483492198-8ca91227489b?w=800'
   };
   
   // Get category images from settings

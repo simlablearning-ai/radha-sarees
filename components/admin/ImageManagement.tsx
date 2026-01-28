@@ -35,7 +35,7 @@ export function ImageManagement() {
   // Background Image
   const [customBgUrl, setCustomBgUrl] = useState(siteSettings.customBackgroundImage || "");
 
-  const categories = ["Semi Silk Sarees", "Cotton Sarees", "Boutique Sarees", "Party wear sarees", "Under Rs.499"];
+  const categories = ["Festival", "Casual", "Ethnic", "Fancy", "Under Rs.499"];
 
   // Hero Image Functions
   const handleAddHeroImage = async (e: React.FormEvent) => {

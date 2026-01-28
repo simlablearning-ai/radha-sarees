@@ -48,24 +48,20 @@ export function CategoryPage({
     }
     // Fallback images based on category
     const fallbackImages: { [key: string]: string } = {
-      Wedding: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80",
+      Festival: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80",
       Ethnic: "https://images.unsplash.com/photo-1583391733981-0b46bbf14a37?w=800&q=80",
-      Casuals: "https://images.unsplash.com/photo-1624206112918-f140f087f9db?w=800&q=80",
-      Festival: "https://images.unsplash.com/photo-1610030469038-1f0d0c5d3d7c?w=800&q=80",
-      "New Arrivals": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=800&q=80",
-      Celebrity: "https://images.unsplash.com/photo-1610030469664-cecb55f22d98?w=800&q=80",
+      Casual: "https://images.unsplash.com/photo-1624206112918-f140f087f9db?w=800&q=80",
+      Fancy: "https://images.unsplash.com/photo-1610030469664-cecb55f22d98?w=800&q=80",
     };
     return fallbackImages[category] || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80";
   };
 
   // Category descriptions
   const categoryDescriptions: { [key: string]: string } = {
-    Wedding: "Discover our stunning collection of bridal and wedding sarees featuring rich fabrics, intricate embroidery, and timeless designs perfect for your special day.",
+    Festival: "Vibrant festive sarees featuring rich colors and traditional patterns ideal for celebrations and weddings.",
     Ethnic: "Traditional ethnic sarees that celebrate India's cultural heritage with authentic designs and premium quality fabrics.",
-    Casuals: "Comfortable and stylish casual sarees perfect for everyday wear, office, or informal gatherings.",
-    Festival: "Vibrant festive sarees featuring rich colors and traditional patterns ideal for celebrations and special occasions.",
-    "New Arrivals": "Check out our latest collection featuring contemporary designs and trending styles.",
-    Celebrity: "Get the celebrity look with our designer sarees inspired by Bollywood fashion.",
+    Casual: "Comfortable and stylish casual sarees perfect for everyday wear, office, or informal gatherings.",
+    Fancy: "Contemporary fancy sarees with exquisite embroidery and modern designs for the fashion-forward.",
   };
 
   // Filter and sort products

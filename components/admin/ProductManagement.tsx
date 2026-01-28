@@ -86,7 +86,7 @@ export function ProductManagement() {
     name: "",
     price: 0,
     originalPrice: 0,
-    category: "Wedding",
+    category: "Festival",
     description: "",
     image: "",
     stock: 0,
@@ -99,7 +99,7 @@ export function ProductManagement() {
     variations: [],
   });
 
-  const categories = ["Semi Silk Sarees", "Cotton Sarees", "Boutique Sarees", "Party wear sarees", "Under Rs.499"];
+  const categories = ["Festival", "Casual", "Ethnic", "Fancy"];
 
   // Helper function to convert file to base64
   const convertFileToBase64 = (file: File): Promise<string> => {
@@ -396,12 +396,15 @@ export function ProductManagement() {
               const variationStrings = value.split('|');
               product[propertyName] = variationStrings.map((varStr, idx) => {
                 const parts = varStr.split(':');
+                // Handle potential colons in image URL by joining remaining parts
+                const image = parts.slice(3).join(':');
+                
                 return {
                   id: `${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 9)}`,
                   color: parts[0] || '',
                   stock: Number(parts[1]) || 0,
                   priceAdjustment: Number(parts[2]) || 0,
-                  image: parts[3] || ''
+                  image: image || ''
                 };
               }).filter(v => v.color); 
             } else {
@@ -553,9 +556,9 @@ export function ProductManagement() {
 
   const downloadSampleCSV = () => {
     const sampleCSV = `name,category,price,originalPrice,stock,weight,image,description,tags,rating,reviews,inStock,hasVariations,variations
-"Royal Silk Saree","Wedding",15999,19999,10,"Pure Silk","https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400","Beautiful silk saree perfect for weddings","featured;new;bestseller",5,128,true,false,""
+"Royal Silk Saree","Festival",15999,19999,10,"Pure Silk","https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400","Beautiful silk saree perfect for weddings","featured;new;bestseller",5,128,true,false,""
 "Designer Saree with Colors","Ethnic",12999,16999,0,"Georgette","https://images.unsplash.com/photo-1583391733981-0b46bbf14a37?w=400","Elegant designer saree for special occasions - Available in multiple colors","featured;designer",4.5,95,true,true,"Red:10:0:|Blue:15:200:|Golden:8:500:"
-"Cotton Saree","Casuals",5999,7999,20,"Cotton","https://images.unsplash.com/photo-1624206112918-f140f087f9db?w=400","Comfortable cotton saree for daily wear","new;casual",4.8,210,true,false,""`;
+"Cotton Saree","Casual",5999,7999,20,"Cotton","https://images.unsplash.com/photo-1624206112918-f140f087f9db?w=400","Comfortable cotton saree for daily wear","new;casual",4.8,210,true,false,""`;
 
     const blob = new Blob([sampleCSV], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -572,7 +575,7 @@ export function ProductManagement() {
       name: "",
       price: 0,
       originalPrice: 0,
-      category: "Wedding",
+      category: "Festival",
       description: "",
       image: "",
       stock: 0,

@@ -14,7 +14,7 @@ interface HeaderProps {
 }
 
 export function Header({ cartItems, onCartClick, onSearchChange, onAccountClick, customerName, onCategoryPageSelect, onWishlistClick }: HeaderProps) {
-  const categories = ["Semi Silk Sarees", "Cotton Sarees", "Boutique Sarees", "Party wear sarees"];
+  const categories = ["Festival", "Casual", "Ethnic", "Fancy"];
 
   return (
     <header className="bg-card shadow-sm sticky top-0 z-50 border-b border-border">

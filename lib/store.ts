@@ -232,8 +232,8 @@ export const useStore = create<StoreState>()(
           isOrganic: false,
           inStock: true,
           stock: 10,
-          category: "Wedding",
-          categories: ["Wedding", "Silk"],
+          category: "Festival",
+          categories: ["Festival", "Silk"],
           tags: ["featured", "new-arrival"],
           description: "Luxurious Banarasi silk saree with intricate zari work, perfect for weddings",
           totalSales: 1247,
@@ -282,8 +282,8 @@ export const useStore = create<StoreState>()(
           isOrganic: false,
           inStock: true,
           stock: 5,
-          category: "Wedding",
-          categories: ["Wedding", "Silk"],
+          category: "Festival",
+          categories: ["Festival", "Silk"],
           tags: ["bestseller"],
           description: "Authentic Kanjeevaram silk with rich golden border and traditional motifs",
           totalSales: 892
@@ -300,8 +300,8 @@ export const useStore = create<StoreState>()(
           isOrganic: false,
           inStock: true,
           stock: 8,
-          category: "Wedding",
-          categories: ["Wedding", "Embroidery"],
+          category: "Fancy",
+          categories: ["Fancy", "Embroidery"],
           tags: ["new-arrival"],
           description: "Contemporary designer saree with exquisite embroidery work",
           totalSales: 1534
@@ -336,8 +336,8 @@ export const useStore = create<StoreState>()(
           isOrganic: true,
           inStock: true,
           stock: 20,
-          category: "Casuals",
-          categories: ["Casuals", "Cotton"],
+          category: "Casual",
+          categories: ["Casual", "Cotton"],
           tags: ["new-arrival"],
           description: "Comfortable cotton saree perfect for everyday wear",
           totalSales: 3421
@@ -353,8 +353,9 @@ export const useStore = create<StoreState>()(
           weight: "Pure Silk",
           isOrganic: false,
           inStock: true,
-          category: "Wedding",
-          categories: ["Wedding", "Silk"],
+          stock: 12, // Default stock, overridden by variations
+          category: "Festival",
+          categories: ["Festival", "Silk"],
           tags: ["featured", "bestseller"],
           description: "Elegant silk saree available in multiple stunning colors. Perfect for weddings and special occasions.",
           totalSales: 987,
@@ -400,10 +401,10 @@ export const useStore = create<StoreState>()(
         heroOverlayColor: '#000000',
         heroShowCategories: true, // Default to showing categories
         categories: [
-          { id: 'semi-silk', name: 'Semi Silk Sarees', displayName: 'Semi Silk Sarees', url: '/category/semi-silk-sarees' },
-          { id: 'cotton', name: 'Cotton Sarees', displayName: 'Cotton Sarees', url: '/category/cotton-sarees' },
-          { id: 'boutique', name: 'Boutique Sarees', displayName: 'Boutique Sarees', url: '/category/boutique-sarees' },
-          { id: 'partywear', name: 'Party wear sarees', displayName: 'Party wear sarees', url: '/category/party-wear-sarees' }
+          { id: 'festival', name: 'Festival', displayName: 'Festival Sarees', url: '/category/festival' },
+          { id: 'casual', name: 'Casual', displayName: 'Casual Sarees', url: '/category/casual' },
+          { id: 'ethnic', name: 'Ethnic', displayName: 'Ethnic Sarees', url: '/category/ethnic' },
+          { id: 'fancy', name: 'Fancy', displayName: 'Fancy Sarees', url: '/category/fancy' }
         ]
       },
       

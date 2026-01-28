@@ -6,12 +6,10 @@ interface NavigationProps {
 
 export function Navigation({ onCategorySelect, selectedCategory, onCategoryPageSelect }: NavigationProps) {
   const categories = [
-    "Wedding",
-    "Ethnic",
-    "Casuals",
     "Festival",
-    "New Arrivals",
-    "Celebrity"
+    "Casual",
+    "Ethnic",
+    "Fancy"
   ];
 
   const handleCategoryClick = (category: string) => {

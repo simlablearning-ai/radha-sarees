@@ -1,14 +1,10 @@
 import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
-import { logger } from "npm:hono/logger";
-import { createClient } from "jsr:@supabase/supabase-js@2";
+import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import * as kv from "./kv_store.tsx";
 import * as notifications from "./notifications.tsx";
 
 const app = new Hono();
-
-// Enable logger
-app.use('*', logger(console.log));
 
 // Enable CORS for all routes and methods
 app.use(
@@ -21,6 +17,37 @@ app.use(
     maxAge: 600,
   }),
 );
+
+// Global error handler
+app.onError((err, c) => {
+  // Check for network errors that shouldn't be logged as application crashes
+  const isNetworkError = err.name === 'Http' || 
+                        err.message.includes('broken pipe') || 
+                        err.message.includes('connection closed');
+
+  if (isNetworkError) {
+    // Return a 499 Client Closed Request status with no body
+    // to minimize write attempts to a closed connection
+    return new Response(null, { status: 499 });
+  }
+
+  // Handle JSON parsing errors (empty body or invalid JSON)
+  if (err instanceof SyntaxError && err.message.includes('JSON')) {
+    return c.json({ error: 'Invalid JSON body' }, 400);
+  }
+
+  console.error('Global Application Error:', err);
+
+  return c.json({ 
+    error: 'Internal Server Error', 
+    message: err.message 
+  }, 500);
+});
+
+// Global not found handler
+app.notFound((c) => {
+  return c.json({ error: 'Not Found', path: c.req.path }, 404);
+});
 
 // Create Supabase client
 const getSupabaseClient = () => {
@@ -36,10 +63,15 @@ const verifyUser = async (authHeader: string | null) => {
   const token = authHeader.split(' ')[1];
   if (!token) return null;
 
-  const supabase = getSupabaseClient();
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) return null;
-  return user;
+  try {
+    const supabase = getSupabaseClient();
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) return null;
+    return user;
+  } catch (error) {
+    console.error('Error verifying user:', error);
+    return null;
+  }
 };
 
 // Health check endpoint
@@ -52,7 +84,8 @@ app.get("/make-server-226dc7f7/health", (c) => {
 // Customer signup
 app.post("/make-server-226dc7f7/auth/signup", async (c) => {
   try {
-    const { email, password, name, phone, address, city, state, pincode } = await c.req.json();
+    const body = await c.req.json();
+    const { email, password, name, phone, address, city, state, pincode } = body;
 
     if (!email || !password || !name || !phone) {
       return c.json({ error: "Missing required fields" }, 400);
@@ -95,6 +128,9 @@ app.post("/make-server-226dc7f7/auth/signup", async (c) => {
       profile 
     });
   } catch (error) {
+    // Let Hono handle SyntaxError from json(), logic logic errors handled here
+    if (error instanceof SyntaxError) throw error;
+    
     console.log('Signup error:', error);
     return c.json({ error: 'Internal server error during signup' }, 500);
   }
@@ -134,6 +170,7 @@ app.post("/make-server-226dc7f7/auth/login", async (c) => {
       profile 
     });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Login error:', error);
     return c.json({ error: 'Internal server error during login' }, 500);
   }
@@ -181,6 +218,7 @@ app.post("/make-server-226dc7f7/auth/admin-login", async (c) => {
 
     return c.json({ error: "Invalid credentials" }, 401);
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Admin login error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -204,6 +242,7 @@ app.post("/make-server-226dc7f7/auth/admin-password", async (c) => {
     await kv.set('admin_credentials', { username: 'admin', password: newPassword });
     return c.json({ success: true });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Change admin password error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -250,6 +289,7 @@ app.post("/make-server-226dc7f7/products", async (c) => {
     
     return c.json({ success: true, product: newProduct });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Add product error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -271,6 +311,7 @@ app.put("/make-server-226dc7f7/products/:id", async (c) => {
     
     return c.json({ success: true, product: updated });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Update product error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -304,6 +345,7 @@ app.post("/make-server-226dc7f7/products/bulk", async (c) => {
     
     return c.json({ success: true, products: addedProducts });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Bulk add products error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -354,19 +396,20 @@ app.post("/make-server-226dc7f7/orders", async (c) => {
     // Send order placed notification
     try {
       if (order.customerPhone && order.customerName) {
-        await notifications.sendOrderPlacedNotification(
+        // Run notification in background without awaiting to prevent timeout
+        notifications.sendOrderPlacedNotification(
           order,
           order.customerPhone,
           order.customerName
-        );
+        ).catch(err => console.log('Background notification error:', err));
       }
     } catch (notifError) {
       console.log('Notification error (non-fatal):', notifError);
-      // Don't fail the order creation if notification fails
     }
     
     return c.json({ success: true, order });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Create order error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -394,20 +437,21 @@ app.put("/make-server-226dc7f7/orders/:id", async (c) => {
     try {
       if (updates.status && updates.status !== existing.status && updated.customerPhone && updated.customerName) {
         const statusType = updates.status.toLowerCase().replace(' ', '');
-        await notifications.sendOrderStatusNotification(
+        // Run notification in background
+        notifications.sendOrderStatusNotification(
           updated,
           updated.customerPhone,
           updated.customerName,
           updates.status
-        );
+        ).catch(err => console.log('Background notification error:', err));
       }
     } catch (notifError) {
       console.log('Notification error (non-fatal):', notifError);
-      // Don't fail the order update if notification fails
     }
     
     return c.json({ success: true, order: updated });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Update order error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -447,6 +491,7 @@ app.put("/make-server-226dc7f7/customer/profile", async (c) => {
     
     return c.json({ success: true, profile: updated });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Update profile error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -486,6 +531,7 @@ app.post("/make-server-226dc7f7/customer/payment-methods", async (c) => {
     
     return c.json({ success: true, method: newMethod });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Add payment method error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -522,6 +568,7 @@ app.put("/make-server-226dc7f7/customer/payment-methods/:id", async (c) => {
     
     return c.json({ success: true, method: updated });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Update payment method error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -579,6 +626,7 @@ app.post("/make-server-226dc7f7/customer/billing-addresses", async (c) => {
     
     return c.json({ success: true, address: newAddress });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Add billing address error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -615,6 +663,7 @@ app.put("/make-server-226dc7f7/customer/billing-addresses/:id", async (c) => {
     
     return c.json({ success: true, address: updated });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Update billing address error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -673,6 +722,7 @@ app.put("/make-server-226dc7f7/settings/payment-gateways/:id", async (c) => {
     
     return c.json({ success: true, gateways: updatedGateways });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Update payment gateway error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -706,6 +756,7 @@ app.put("/make-server-226dc7f7/settings/site", async (c) => {
     
     return c.json({ success: true, settings: updated });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Update site settings error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -738,6 +789,7 @@ app.put("/make-server-226dc7f7/settings/store", async (c) => {
     
     return c.json({ success: true, settings: updated });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Update store settings error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -770,6 +822,7 @@ app.put("/make-server-226dc7f7/settings/shipping", async (c) => {
     
     return c.json({ success: true, settings: updated });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Update shipping settings error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -816,6 +869,7 @@ app.put("/make-server-226dc7f7/settings/notifications", async (c) => {
     
     return c.json({ success: true, settings: updated });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Update notification settings error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -853,6 +907,7 @@ app.post("/make-server-226dc7f7/notifications/test", async (c) => {
       }, 500);
     }
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Test notification error:', error);
     return c.json({ error: `Test notification failed: ${error.message}` }, 500);
   }
@@ -892,6 +947,7 @@ app.post("/make-server-226dc7f7/notifications/order", async (c) => {
 
     return c.json({ success: true, message: 'Notification sent successfully' });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Send order notification error:', error);
     return c.json({ error: `Failed to send notification: ${error.message}` }, 500);
   }
@@ -957,6 +1013,7 @@ app.post("/make-server-226dc7f7/reports", async (c) => {
     
     return c.json({ success: true, report });
   } catch (error) {
+    if (error instanceof SyntaxError) throw error;
     console.log('Generate report error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
@@ -986,4 +1043,48 @@ app.delete("/make-server-226dc7f7/reports/:id", async (c) => {
   }
 });
 
-Deno.serve(app.fetch);
+// Helper to identify errors we want to suppress from logs
+const isSuppressedError = (err: any) => {
+  const msg = err?.message || String(err);
+  const name = err?.name || '';
+  return msg.includes('broken pipe') || 
+         msg.includes('connection closed') || 
+         name === 'Http' ||
+         (err instanceof Error && err.name === 'Http');
+};
+
+// Add global error listeners to suppress noise in logs
+globalThis.addEventListener("error", (e) => {
+  if (isSuppressedError(e.error)) {
+    e.preventDefault();
+    return;
+  }
+  
+  // Explicitly log other errors since we might be adding listeners
+  console.error("Global unhandled error:", e.error);
+});
+
+globalThis.addEventListener("unhandledrejection", (e) => {
+  if (isSuppressedError(e.reason)) {
+    e.preventDefault();
+    return;
+  }
+  
+  console.error("Global unhandled rejection:", e.reason);
+});
+
+// Start the server with error handling wrapper
+Deno.serve(async (req, info) => {
+  try {
+    return await app.fetch(req, info);
+  } catch (err) {
+    if (isSuppressedError(err)) {
+      // Client disconnected, return partial response to satisfy runtime if possible
+      // or just a 499 which denotes Client Closed Request
+      return new Response(null, { status: 499 });
+    }
+    
+    console.error("Deno serve error:", err);
+    return new Response("Internal Server Error", { status: 500 });
+  }
+});
