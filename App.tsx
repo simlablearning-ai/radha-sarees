@@ -20,9 +20,12 @@ import { Button } from "./components/ui/button";
 import { toast } from "sonner";
 import { Toaster } from "./components/ui/sonner";
 import { toSlug, fromSlug, toProductSlug, extractProductId, toCategoryUrl, toProductUrl } from "./lib/urlUtils";
+import { PrivacyPolicy } from "./components/PrivacyPolicy";
+import { ShippingPolicy } from "./components/ShippingPolicy";
+import { TermsConditions } from "./components/TermsConditions";
 import type { Product } from "./lib/store";
 
-type ViewType = 'store' | 'admin' | 'product' | 'category' | 'customer-dashboard' | 'wishlist' | 'search';
+type ViewType = 'store' | 'admin' | 'product' | 'category' | 'customer-dashboard' | 'wishlist' | 'search' | 'privacy-policy' | 'shipping-policy' | 'terms-conditions';
 
 interface CartItem {
   id: number;
@@ -80,6 +83,12 @@ export default function App() {
         setView('wishlist');
       } else if (path === '/search') {
         setView('search');
+      } else if (path === '/privacy-policy') {
+        setView('privacy-policy');
+      } else if (path === '/shipping-policy') {
+        setView('shipping-policy');
+      } else if (path === '/terms-conditions') {
+        setView('terms-conditions');
       } else {
         setView('store');
         setSelectedProductId(null);
@@ -151,20 +160,26 @@ export default function App() {
     toast.success(`${product.name} added to cart!`);
   };
 
-  const handleUpdateQuantity = (productId: number, quantity: number) => {
+  const handleUpdateQuantity = (productId: number, quantity: number, variationId?: string) => {
     if (quantity === 0) {
-      setCartItems(prev => prev.filter(item => item.id !== productId));
+      setCartItems(prev => prev.filter(item => 
+        !(item.id === productId && item.selectedVariation?.id === variationId)
+      ));
     } else {
       setCartItems(prev =>
         prev.map(item =>
-          item.id === productId ? { ...item, quantity } : item
+          (item.id === productId && item.selectedVariation?.id === variationId)
+            ? { ...item, quantity }
+            : item
         )
       );
     }
   };
 
-  const handleRemoveItem = (productId: number) => {
-    setCartItems(prev => prev.filter(item => item.id !== productId));
+  const handleRemoveItem = (productId: number, variationId?: string) => {
+    setCartItems(prev => prev.filter(item => 
+      !(item.id === productId && item.selectedVariation?.id === variationId)
+    ));
     toast.success("Item removed from cart");
   };
 
@@ -392,6 +407,49 @@ export default function App() {
           wishlist={wishlist}
           onProductClick={handleProductClick}
         />
+        
+        <Footer />
+        
+        <Cart
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          items={cartItems}
+          onUpdateQuantity={handleUpdateQuantity}
+          onRemoveItem={handleRemoveItem}
+          onProceedToCheckout={handleProceedToCheckout}
+        />
+
+        <Checkout
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          items={cartItems}
+          onCheckoutComplete={handleCheckoutComplete}
+        />
+
+        <Toaster />
+      </>
+    );
+  }
+
+  // Render Policy Pages
+  if (['privacy-policy', 'shipping-policy', 'terms-conditions'].includes(view)) {
+    return (
+      <>
+        <Header
+          cartItems={totalCartItems}
+          onCartClick={() => setIsCartOpen(true)}
+          onSearchChange={setSearchQuery}
+          onAccountClick={handleAccountClick}
+          customerName={currentCustomer?.name}
+          onCategoryPageSelect={handleCategoryPageSelect}
+          onWishlistClick={handleWishlistClick}
+        />
+        
+        <div className="pt-24 pb-16 min-h-screen bg-background">
+          {view === 'privacy-policy' && <PrivacyPolicy />}
+          {view === 'shipping-policy' && <ShippingPolicy />}
+          {view === 'terms-conditions' && <TermsConditions />}
+        </div>
         
         <Footer />
         

@@ -37,12 +37,9 @@ export function Footer() {
           <div>
             <h3 className="text-sidebar-foreground mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sidebar-foreground/80">
-              <li><a href="#" className="hover:text-primary transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Our Heritage</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Quality Promise</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Styling Guide</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">FAQ</a></li>
+              <li><a href="/" className="hover:text-primary transition-colors">About Us</a></li>
+              <li><a href="/" className="hover:text-primary transition-colors">Our Heritage</a></li>
+              <li><a href="/" className="hover:text-primary transition-colors">Quality Promise</a></li>
             </ul>
           </div>
 
@@ -50,12 +47,11 @@ export function Footer() {
           <div>
             <h3 className="text-sidebar-foreground mb-4">Customer Service</h3>
             <ul className="space-y-2 text-sidebar-foreground/80">
-              <li><a href="#" className="hover:text-primary transition-colors">Contact Us</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Shipping Info</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Returns & Exchanges</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Saree Care Guide</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Track Your Order</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Bulk Orders</a></li>
+              <li><a href="/" className="hover:text-primary transition-colors">Contact Us</a></li>
+              <li><a href="/shipping-policy" className="hover:text-primary transition-colors">Shipping Policy</a></li>
+              <li><a href="/" className="hover:text-primary transition-colors">Returns & Exchanges</a></li>
+              <li><a href="/terms-conditions" className="hover:text-primary transition-colors">Terms & Conditions</a></li>
+              <li><a href="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</a></li>
             </ul>
           </div>
 
@@ -100,9 +96,8 @@ export function Footer() {
             © 2024 Radha Sarees. All rights reserved.
           </div>
           <div className="flex gap-6 text-sidebar-foreground/80">
-            <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-primary transition-colors">Cookie Policy</a>
+            <a href="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</a>
+            <a href="/terms-conditions" className="hover:text-primary transition-colors">Terms of Service</a>
           </div>
         </div>
       </div>

@@ -1008,49 +1008,78 @@ export function ProductManagement() {
                     <p className="text-muted-foreground text-sm">Show this product as available</p>
                   </div>
                   <Switch
+                    type="button"
                     checked={formData.inStock}
-                    onCheckedChange={(checked) => setFormData({ ...formData, inStock: checked })}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, inStock: checked }))}
                   />
                 </div>
 
                 {/* Color Variations Section */}
-                <div className="border-2 border-primary/30 rounded-lg p-4 space-y-4 bg-primary/5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <Label className="text-lg">Color Variations</Label>
-                      <p className="text-muted-foreground text-sm">Add multiple color options for this product</p>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
+                    <div>
+                      <Label>Color Variations</Label>
+                      <p className="text-muted-foreground text-sm">Enable this to add multiple colors</p>
                     </div>
-                    <div className="flex-shrink-0">
-                      <Switch
-                        checked={formData.hasVariations}
-                        onCheckedChange={(checked) => {
-                          const currentVariations = formData.variations || [];
-                          if (checked && currentVariations.length === 0) {
-                             // Add first variation by default when enabling
-                             setFormData({ 
-                               ...formData, 
-                               hasVariations: checked,
-                               variations: [{
-                                 id: Date.now().toString(),
-                                 color: '',
-                                 stock: 0,
-                                 priceAdjustment: 0,
-                                 image: ''
-                               }]
-                             });
+                    <Switch
+                      type="button"
+                      checked={formData.hasVariations}
+                      onCheckedChange={(checked) => {
+                        setFormData(prev => {
+                          if (checked) {
+                            return {
+                              ...prev,
+                              hasVariations: true,
+                              variations: prev.variations && prev.variations.length > 0 
+                                ? prev.variations 
+                                : [{
+                                    id: Date.now().toString(),
+                                    color: '',
+                                    stock: 0,
+                                    priceAdjustment: 0,
+                                    image: ''
+                                  }]
+                            };
                           } else {
-                             // Just toggle, keeping existing variations if any
-                             setFormData({ ...formData, hasVariations: checked });
+                            return {
+                              ...prev,
+                              hasVariations: false
+                            };
                           }
-                        }}
-                      />
-                    </div>
+                        });
+                      }}
+                    />
                   </div>
 
                   {formData.hasVariations && (
-                    <div className="space-y-3 pt-2">
+                    <div className="border border-border rounded-lg p-4 space-y-4 bg-primary/5">
+                      {formData.variations && formData.variations.length === 0 && (
+                         <div className="p-4 bg-muted text-center rounded-lg">
+                           <p className="text-sm text-muted-foreground mb-2">No variations added yet.</p>
+                           <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  variations: [{
+                                    id: Date.now().toString(),
+                                    color: '',
+                                    stock: 0,
+                                    priceAdjustment: 0,
+                                    image: ''
+                                  }]
+                                });
+                              }}
+                           >
+                             <Plus className="h-4 w-4 mr-2" /> Add First Color
+                           </Button>
+                         </div>
+                      )}
+                      
                       {(formData.variations || []).map((variation, index) => (
-                        <div key={variation.id} className="p-4 bg-card border border-border rounded-lg space-y-4 shadow-sm">
+                        <div key={variation.id} className="p-4 bg-secondary border border-border rounded-lg space-y-4 shadow-sm">
                           <div className="flex items-center justify-between">
                             <Label className="text-sm">Color Variation {index + 1}</Label>
                             {formData.variations.length > 1 && (
@@ -1674,49 +1703,78 @@ export function ProductManagement() {
                 <p className="text-muted-foreground text-sm">Show this product as available</p>
               </div>
               <Switch
+                type="button"
                 checked={formData.inStock}
-                onCheckedChange={(checked) => setFormData({ ...formData, inStock: checked })}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, inStock: checked }))}
               />
             </div>
 
-            {/* Color Variations Section */}
-            <div className="border-2 border-primary/30 rounded-lg p-4 space-y-4 bg-primary/5">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <Label className="text-lg">Color Variations</Label>
-                  <p className="text-muted-foreground text-sm">Add multiple color options for this product</p>
+                {/* Color Variations Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
+                <div>
+                  <Label>Color Variations</Label>
+                  <p className="text-muted-foreground text-sm">Enable this to add multiple colors</p>
                 </div>
-                <div className="flex-shrink-0">
-                  <Switch
-                    checked={formData.hasVariations}
-                    onCheckedChange={(checked) => {
-                      const currentVariations = formData.variations || [];
-                      if (checked && currentVariations.length === 0) {
-                        // Add first variation by default when enabling
-                        setFormData({ 
-                          ...formData, 
-                          hasVariations: checked,
-                          variations: [{
-                            id: Date.now().toString(),
-                            color: '',
-                            stock: 0,
-                            priceAdjustment: 0,
-                            image: ''
-                          }]
-                        });
+                <Switch
+                  type="button"
+                  checked={formData.hasVariations}
+                  onCheckedChange={(checked) => {
+                    setFormData(prev => {
+                      if (checked) {
+                        return {
+                          ...prev,
+                          hasVariations: true,
+                          variations: prev.variations && prev.variations.length > 0 
+                            ? prev.variations 
+                            : [{
+                                id: Date.now().toString(),
+                                color: '',
+                                stock: 0,
+                                priceAdjustment: 0,
+                                image: ''
+                              }]
+                        };
                       } else {
-                        // Just toggle, keeping existing variations if any
-                        setFormData({ ...formData, hasVariations: checked });
+                        return {
+                          ...prev,
+                          hasVariations: false
+                        };
                       }
-                    }}
-                  />
-                </div>
+                    });
+                  }}
+                />
               </div>
 
               {formData.hasVariations && (
-                <div className="space-y-3 pt-2">
+                <div className="border border-border rounded-lg p-4 space-y-4 bg-primary/5">
+                  {formData.variations && formData.variations.length === 0 && (
+                      <div className="p-4 bg-muted text-center rounded-lg">
+                        <p className="text-sm text-muted-foreground mb-2">No variations added yet.</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              variations: [{
+                                id: Date.now().toString(),
+                                color: '',
+                                stock: 0,
+                                priceAdjustment: 0,
+                                image: ''
+                              }]
+                            });
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" /> Add First Color
+                        </Button>
+                      </div>
+                  )}
+
                   {(formData.variations || []).map((variation, index) => (
-                    <div key={variation.id} className="p-4 bg-card border border-border rounded-lg space-y-4 shadow-sm">
+                    <div key={variation.id} className="p-4 bg-secondary border border-border rounded-lg space-y-4 shadow-sm">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm">Color Variation {index + 1}</Label>
                         {formData.variations.length > 1 && (

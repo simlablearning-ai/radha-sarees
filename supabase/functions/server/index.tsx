@@ -832,20 +832,20 @@ app.post("/make-server-226dc7f7/notifications/test", async (c) => {
 
     const message = `Test notification from Radha Sarees! This is a test message to verify your SMS/WhatsApp configuration. Timestamp: ${new Date().toISOString()}`;
     
+    // Fast2SMS only supports SMS via this integration
     const smsSuccess = settings.smsEnabled 
-      ? await notifications.sendNotification(phone, message, settings, 'sms')
+      ? await notifications.sendNotification(phone, message, settings)
       : false;
     
-    const whatsappSuccess = settings.whatsappEnabled 
-      ? await notifications.sendNotification(phone, message, settings, 'whatsapp')
-      : false;
+    // WhatsApp is not currently supported by the Fast2SMS integration
+    const whatsappSuccess = false;
 
-    if (smsSuccess || whatsappSuccess) {
+    if (smsSuccess) {
       return c.json({ 
         success: true, 
-        message: 'Test notification sent successfully',
+        message: 'Test SMS notification sent successfully',
         smsSuccess,
-        whatsappSuccess 
+        whatsappSuccess: false 
       });
     } else {
       return c.json({ 

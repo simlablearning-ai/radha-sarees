@@ -18,8 +18,8 @@ interface CartProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
-  onUpdateQuantity: (productId: number, quantity: number) => void;
-  onRemoveItem: (productId: number) => void;
+  onUpdateQuantity: (productId: number, quantity: number, variationId?: string) => void;
+  onRemoveItem: (productId: number, variationId?: string) => void;
   onProceedToCheckout?: () => void;
 }
 
@@ -97,7 +97,7 @@ export function Cart({
                                 variant="outline"
                                 size="sm"
                                 className="h-8 w-8 p-0"
-                                onClick={() => onUpdateQuantity(item.id, Math.max(0, item.quantity - 1))}
+                                onClick={() => onUpdateQuantity(item.id, Math.max(0, item.quantity - 1), item.selectedVariation?.id)}
                               >
                                 <Minus className="h-3 w-3" />
                               </Button>
@@ -108,7 +108,7 @@ export function Cart({
                                 variant="outline"
                                 size="sm"
                                 className="h-8 w-8 p-0"
-                                onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                                onClick={() => onUpdateQuantity(item.id, item.quantity + 1, item.selectedVariation?.id)}
                               >
                                 <Plus className="h-3 w-3" />
                               </Button>
@@ -119,7 +119,7 @@ export function Cart({
                                 ₹{(itemPrice * item.quantity).toFixed(2)}
                               </p>
                               <button
-                                onClick={() => onRemoveItem(item.id)}
+                                onClick={() => onRemoveItem(item.id, item.selectedVariation?.id)}
                                 className="text-xs text-red-500 hover:text-red-700"
                               >
                                 Remove

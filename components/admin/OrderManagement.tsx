@@ -35,8 +35,10 @@ export function OrderManagement() {
     setIsViewDialogOpen(true);
   };
 
-  const handleUpdateStatus = async (orderId: number, newStatus: string) => {
-    const success = await syncedActions.updateOrderStatus(orderId, newStatus);
+  const handleUpdateStatus = async (orderId: string | number, newStatus: string) => {
+    // Ensure orderId is converted to string properly
+    const id = orderId.toString();
+    const success = await syncedActions.updateOrderStatus(id, newStatus);
     if (success) {
       toast.success(`Order status updated to ${newStatus}`);
     }

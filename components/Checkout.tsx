@@ -7,7 +7,7 @@ import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Textarea } from "./ui/textarea";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "./ui/sheet";
 import { CreditCard, Wallet, Banknote, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -94,6 +94,9 @@ export function Checkout({ isOpen, onClose, items, onCheckoutComplete }: Checkou
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Checkout</SheetTitle>
+          <SheetDescription className="text-muted-foreground">
+            Complete your order by providing shipping details and payment.
+          </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6">

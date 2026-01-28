@@ -60,28 +60,40 @@ async function sendViaFast2SMS(
 
     console.log('Sending Fast2SMS request:', { route, numbers: cleanPhone, messageLength: message.length });
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'authorization': apiKey, // Fast2SMS uses authorization header
-      },
-      body: formData.toString(),
-    });
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
 
-    const responseData = await response.json();
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'authorization': apiKey, // Fast2SMS uses authorization header
+        },
+        body: formData.toString(),
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
 
-    console.log('Fast2SMS response:', responseData);
+      const responseData = await response.json();
 
-    // Check if the request was successful
-    // Fast2SMS returns { "return": true, "request_id": "...", "message": [...] }
-    if (!response.ok || !responseData.return) {
-      console.error('Fast2SMS error:', responseData);
-      return false;
+      console.log('Fast2SMS response:', responseData);
+
+      // Check if the request was successful
+      // Fast2SMS returns { "return": true, "request_id": "...", "message": [...] }
+      if (!response.ok || !responseData.return) {
+        console.error('Fast2SMS error:', responseData);
+        return false;
+      }
+
+      console.log('SMS sent successfully via Fast2SMS:', responseData);
+      return true;
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      throw fetchError;
     }
-
-    console.log('SMS sent successfully via Fast2SMS:', responseData);
-    return true;
   } catch (error) {
     console.error('Error sending SMS via Fast2SMS:', error);
     return false;

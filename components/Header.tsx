@@ -1,4 +1,4 @@
-import { ShoppingCart, Search, Menu, Heart, User } from "lucide-react";
+import { ShoppingCart, Search, Menu, Heart, User, Lock } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
@@ -101,6 +101,21 @@ export function Header({ cartItems, onCartClick, onSearchChange, onAccountClick,
 
             {/* Actions - Account & Cart */}
             <div className="flex items-center gap-2 flex-shrink-0">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="hidden sm:flex items-center gap-2 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                onClick={() => {
+                  window.history.pushState({}, '', '/admin');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }}
+              >
+                <Lock className="h-5 w-5" />
+                <span className="hidden xl:inline" style={{ fontSize: 'var(--text-sm)' }}>
+                  Admin
+                </span>
+              </Button>
+
               <Button 
                 variant="ghost" 
                 size="sm" 
