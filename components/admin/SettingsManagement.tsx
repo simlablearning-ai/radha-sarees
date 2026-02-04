@@ -139,11 +139,22 @@ export function SettingsManagement() {
   const handleTestNotification = async () => {
     setIsTesting(true);
     try {
-      await api.testNotification(testPhone, notificationSettings);
+      // Create a temporary settings object that enables SMS for the test
+      // This allows testing even if the main switch is off
+      const testSettings = { ...notificationSettings, smsEnabled: true };
+      
+      const response = await api.testNotification(testPhone, testSettings);
+      
+      // The backend now returns success: false with an error message in the body
+      // We need to check for that
+      if (response && response.success === false) {
+        throw new Error(response.error || "Failed to send test notification");
+      }
+      
       toast.success("Test notification sent successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending test notification:', error);
-      toast.error("Failed to send test notification");
+      toast.error(error.message || "Failed to send test notification");
     } finally {
       setIsTesting(false);
     }

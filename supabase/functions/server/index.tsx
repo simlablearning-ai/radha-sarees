@@ -21,9 +21,12 @@ app.use(
 // Global error handler
 app.onError((err, c) => {
   // Check for network errors that shouldn't be logged as application crashes
-  const isNetworkError = err.name === 'Http' || 
-                        err.message.includes('broken pipe') || 
-                        err.message.includes('connection closed');
+  // Deno often raises 'Http' errors when the client disconnects abruptly
+  const isNetworkError = 
+    err.name === 'Http' || 
+    err.message?.includes('broken pipe') || 
+    err.message?.includes('connection closed') ||
+    String(err).includes('Http: connection closed');
 
   if (isNetworkError) {
     // Return a 499 Client Closed Request status with no body
@@ -887,23 +890,27 @@ app.post("/make-server-226dc7f7/notifications/test", async (c) => {
     const message = `Test notification from Radha Sarees! This is a test message to verify your SMS/WhatsApp configuration. Timestamp: ${new Date().toISOString()}`;
     
     // Fast2SMS only supports SMS via this integration
-    const smsSuccess = settings.smsEnabled 
+    const smsResult = settings.smsEnabled 
       ? await notifications.sendNotification(phone, message, settings)
-      : false;
+      : { success: false, error: 'SMS is disabled' };
     
     // WhatsApp is not currently supported by the Fast2SMS integration
     const whatsappSuccess = false;
 
-    if (smsSuccess) {
+    if (smsResult.success) {
       return c.json({ 
         success: true, 
         message: 'Test SMS notification sent successfully',
-        smsSuccess,
-        whatsappSuccess: false 
+        smsSuccess: true,
+        whatsappSuccess: false,
+        details: smsResult.responseData
       });
     } else {
       return c.json({ 
-        error: 'Failed to send test notification. Please check your settings and credentials.' 
+        success: false,
+        error: `Failed to send test notification: ${smsResult.error || 'Unknown error'}`,
+        smsSuccess: false,
+        details: smsResult
       }, 500);
     }
   } catch (error) {
@@ -1045,8 +1052,20 @@ app.delete("/make-server-226dc7f7/reports/:id", async (c) => {
 
 // Helper to identify errors we want to suppress from logs
 const isSuppressedError = (err: any) => {
-  const msg = err?.message || String(err);
-  const name = err?.name || '';
+  if (!err) return false;
+  
+  // Check for string representation
+  const str = String(err);
+  if (str.includes('Http: connection closed') || 
+      str.includes('broken pipe') ||
+      str.includes('connection closed before message completed')) {
+    return true;
+  }
+
+  // Check for error object properties
+  const msg = err.message || '';
+  const name = err.name || '';
+  
   return msg.includes('broken pipe') || 
          msg.includes('connection closed') || 
          name === 'Http' ||

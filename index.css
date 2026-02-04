@@ -1063,6 +1063,10 @@
     width: 180px;
   }
 
+  .w-auto {
+    width: auto;
+  }
+
   .w-fit {
     width: fit-content;
   }
@@ -1375,6 +1379,10 @@
 
   .rounded-\[4px\] {
     border-radius: 4px;
+  }
+
+  .rounded-\[5px\] {
+    border-radius: 5px;
   }
 
   .rounded-full {
@@ -1927,6 +1935,10 @@
     fill: var(--primary);
   }
 
+  .object-contain {
+    object-fit: contain;
+  }
+
   .object-cover {
     object-fit: cover;
   }
@@ -2207,26 +2219,6 @@
 
   .text-foreground {
     color: var(--foreground);
-  }
-
-  .text-foreground\/70 {
-    color: var(--foreground);
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .text-foreground\/70 {
-      color: color-mix(in oklab, var(--foreground) 70%, transparent);
-    }
-  }
-
-  .text-foreground\/80 {
-    color: var(--foreground);
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .text-foreground\/80 {
-      color: color-mix(in oklab, var(--foreground) 80%, transparent);
-    }
   }
 
   .text-gray-300 {
@@ -2822,12 +2814,6 @@
   @media (hover: hover) {
     .hover\:underline:hover {
       text-decoration-line: underline;
-    }
-  }
-
-  @media (hover: hover) {
-    .hover\:opacity-90:hover {
-      opacity: .9;
     }
   }
 

@@ -2,6 +2,8 @@ import { ShoppingCart, Search, Menu, Heart, User, Lock } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
+import { ImageWithFallback } from "./figma/ImageWithFallback";
+import logoImage from "figma:asset/5a354ddfe06442f0910d1b354dd98b0d148f05bb.png";
 
 interface HeaderProps {
   cartItems: number;
@@ -18,41 +20,20 @@ export function Header({ cartItems, onCartClick, onSearchChange, onAccountClick,
 
   return (
     <header className="bg-card shadow-sm sticky top-0 z-50 border-b border-border">
-      {/* Top Bar */}
-      <div className="bg-primary/10 border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-10">
-            <div className="flex items-center gap-4">
-              <p className="text-foreground/80" style={{ fontSize: 'var(--text-sm)' }}>Free Shipping on Orders Above ₹2,999</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button className="text-foreground/70 hover:text-foreground transition-colors" style={{ fontSize: 'var(--text-sm)' }}>
-                Track Order
-              </button>
-              <button className="text-foreground/70 hover:text-foreground transition-colors" style={{ fontSize: 'var(--text-sm)' }}>
-                Help
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Header - Single Row with Primary Background */}
       <div className="bg-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-6 h-16">
+          <div className="flex items-center justify-between gap-6 h-24">
             {/* Logo */}
             <div className="flex-shrink-0">
               <a href="#" className="block">
-                <h1 
-                  className="text-primary-foreground whitespace-nowrap cursor-pointer hover:opacity-90 transition-opacity"
-                  style={{ 
-                    fontFamily: 'var(--font-family-inter)',
-                    fontSize: 'var(--text-2xl)'
-                  }}
-                >
-                  Radha Sarees
-                </h1>
+                <div className="h-20 w-auto overflow-hidden flex items-center bg-white rounded-[5px] p-1">
+                   <ImageWithFallback 
+                     src={logoImage} 
+                     alt="Radha Sarees" 
+                     className="h-full w-auto object-contain"
+                   />
+                </div>
               </a>
             </div>
 
