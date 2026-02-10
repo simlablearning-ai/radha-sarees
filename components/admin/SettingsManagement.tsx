@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useStore } from "../../lib/store";
 import { api } from "../../lib/api";
+import { syncedActions } from "../../lib/useData";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -88,22 +89,30 @@ export function SettingsManagement() {
     loadSettings();
   }, []);
 
-  const handleSaveRazorpay = () => {
-    updatePaymentGateway('razorpay', {
-      enabled: razorpaySettings.enabled,
-      apiKey: razorpaySettings.apiKey,
-      secretKey: razorpaySettings.secretKey,
-    });
-    toast.success("Razorpay settings saved!");
+  const handleSaveRazorpay = async () => {
+    try {
+      await syncedActions.updatePaymentGateway('razorpay', {
+        enabled: razorpaySettings.enabled,
+        apiKey: razorpaySettings.apiKey,
+        secretKey: razorpaySettings.secretKey,
+      });
+      toast.success("Razorpay settings saved!");
+    } catch (error) {
+      // Error handled by syncedActions
+    }
   };
 
-  const handleSavePhonePe = () => {
-    updatePaymentGateway('phonepe', {
-      enabled: phonePeSettings.enabled,
-      apiKey: phonePeSettings.apiKey,
-      secretKey: phonePeSettings.secretKey,
-    });
-    toast.success("PhonePe settings saved!");
+  const handleSavePhonePe = async () => {
+    try {
+      await syncedActions.updatePaymentGateway('phonepe', {
+        enabled: phonePeSettings.enabled,
+        apiKey: phonePeSettings.apiKey,
+        secretKey: phonePeSettings.secretKey,
+      });
+      toast.success("PhonePe settings saved!");
+    } catch (error) {
+      // Error handled by syncedActions
+    }
   };
 
   const handleSaveStoreSettings = async () => {
