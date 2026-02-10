@@ -1,6 +1,8 @@
 import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
+import Razorpay from "npm:razorpay";
+import { createHmac } from "node:crypto";
 import * as kv from "./kv_store.tsx";
 import * as notifications from "./notifications.tsx";
 
@@ -20,17 +22,8 @@ app.use(
 
 // Global error handler
 app.onError((err, c) => {
-  // Check for network errors that shouldn't be logged as application crashes
-  // Deno often raises 'Http' errors when the client disconnects abruptly
-  const isNetworkError = 
-    err.name === 'Http' || 
-    err.message?.includes('broken pipe') || 
-    err.message?.includes('connection closed') ||
-    String(err).includes('Http: connection closed');
-
-  if (isNetworkError) {
-    // Return a 499 Client Closed Request status with no body
-    // to minimize write attempts to a closed connection
+  // Use the shared helper to check for suppressed errors
+  if (isSuppressedError(err)) {
     return new Response(null, { status: 499 });
   }
 
@@ -920,6 +913,69 @@ app.post("/make-server-226dc7f7/notifications/test", async (c) => {
   }
 });
 
+// ==================== PAYMENT ====================
+
+// Create Razorpay Order
+app.post("/make-server-226dc7f7/payment/razorpay/create-order", async (c) => {
+  try {
+    const { amount, currency = "INR" } = await c.req.json();
+    
+    // Get credentials from KV
+    const gateways = await kv.get('settings:payment_gateways');
+    const razorpaySettings = gateways?.find((g: any) => g.id === 'razorpay');
+    
+    if (!razorpaySettings || !razorpaySettings.enabled || !razorpaySettings.apiKey || !razorpaySettings.secretKey) {
+       return c.json({ error: "Razorpay not configured or disabled" }, 400);
+    }
+
+    const instance = new Razorpay({
+      key_id: razorpaySettings.apiKey,
+      key_secret: razorpaySettings.secretKey,
+    });
+
+    const options = {
+      amount: Math.round(amount * 100), // amount in paisa
+      currency,
+      receipt: `receipt_${Date.now()}`,
+    };
+
+    const order = await instance.orders.create(options);
+    return c.json({ order, key_id: razorpaySettings.apiKey });
+  } catch (error) {
+    console.log("Razorpay order creation error:", error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Verify Razorpay Payment
+app.post("/make-server-226dc7f7/payment/razorpay/verify", async (c) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await c.req.json();
+    
+    // Get credentials from KV
+    const gateways = await kv.get('settings:payment_gateways');
+    const razorpaySettings = gateways?.find((g: any) => g.id === 'razorpay');
+    
+    if (!razorpaySettings || !razorpaySettings.secretKey) {
+       return c.json({ error: "Razorpay configuration error" }, 400);
+    }
+
+    const generated_signature = createHmac('sha256', razorpaySettings.secretKey)
+      .update(razorpay_order_id + "|" + razorpay_payment_id)
+      .digest('hex');
+
+    if (generated_signature === razorpay_signature) {
+      return c.json({ success: true, message: "Payment verified successfully" });
+    } else {
+      console.error("Razorpay signature verification failed. Generated:", generated_signature, "Received:", razorpay_signature);
+      return c.json({ error: "Payment verification failed" }, 400);
+    }
+  } catch (error) {
+    console.log("Razorpay verification error:", error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // Send order notification
 app.post("/make-server-226dc7f7/notifications/order", async (c) => {
   try {
@@ -1054,22 +1110,34 @@ app.delete("/make-server-226dc7f7/reports/:id", async (c) => {
 const isSuppressedError = (err: any) => {
   if (!err) return false;
   
-  // Check for string representation
   const str = String(err);
-  if (str.includes('Http: connection closed') || 
-      str.includes('broken pipe') ||
-      str.includes('connection closed before message completed')) {
-    return true;
-  }
-
-  // Check for error object properties
   const msg = err.message || '';
   const name = err.name || '';
+  const code = err.code || '';
   
-  return msg.includes('broken pipe') || 
-         msg.includes('connection closed') || 
-         name === 'Http' ||
-         (err instanceof Error && err.name === 'Http');
+  // Common Deno/network errors to suppress
+  const networkErrors = [
+    'Http: connection closed',
+    'connection closed before message completed',
+    'broken pipe',
+    'network error',
+    'connection reset',
+    'request aborted',
+    'connection error',
+    'error writing a body to connection'
+  ];
+  
+  const matches = (text: string) => networkErrors.some(e => text.includes(e));
+
+  // Additional check for error object structure that matches Deno's Http error
+  const isHttpError = (
+    name === 'Http' || 
+    code === 'EPIPE' ||
+    (err instanceof Error && err.name === 'Http') ||
+    str.includes('Http:')
+  );
+
+  return matches(str) || matches(msg) || isHttpError;
 };
 
 // Add global error listeners to suppress noise in logs

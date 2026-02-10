@@ -35,6 +35,29 @@ export function SettingsManagement() {
     secretKey: paymentGateways.find(g => g.id === 'phonepe')?.secretKey || '',
   });
 
+  // Sync local state with store when data is loaded from server
+  useEffect(() => {
+    const razorpay = paymentGateways.find(g => g.id === 'razorpay');
+    if (razorpay) {
+      setRazorpaySettings(prev => ({
+        ...prev,
+        enabled: razorpay.enabled,
+        apiKey: razorpay.apiKey || prev.apiKey || '', // Prefer store, fallback to local (user input)
+        secretKey: razorpay.secretKey || prev.secretKey || '',
+      }));
+    }
+
+    const phonepe = paymentGateways.find(g => g.id === 'phonepe');
+    if (phonepe) {
+      setPhonePeSettings(prev => ({
+        ...prev,
+        enabled: phonepe.enabled,
+        apiKey: phonepe.apiKey || prev.apiKey || '',
+        secretKey: phonepe.secretKey || prev.secretKey || '',
+      }));
+    }
+  }, [paymentGateways]);
+
   const [storeSettings, setStoreSettings] = useState({
     storeName: 'Radha Sarees',
     contactEmail: 'info@radhasarees.com',

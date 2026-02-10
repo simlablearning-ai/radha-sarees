@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "../lib/store";
 import { syncedActions } from "../lib/useData";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -37,12 +38,29 @@ export function Checkout({ isOpen, onClose, items, onCheckoutComplete }: Checkou
   const razorpayEnabled = paymentGateways.find(g => g.id === 'razorpay')?.enabled;
   const phonePeEnabled = paymentGateways.find(g => g.id === 'phonepe')?.enabled;
 
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const handleSubmitDetails = (e: React.FormEvent) => {
     e.preventDefault();
     setStep('payment');
   };
 
-  const handlePlaceOrder = async () => {
+  useEffect(() => {
+    if (document.getElementById('razorpay-checkout-js')) return;
+    const script = document.createElement('script');
+    script.id = 'razorpay-checkout-js';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+    // Do not remove script on unmount to prevent reloading issues if component remounts quickly
+  }, []);
+
+  const handlePlaceOrder = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent any default form submission
+    
+    if (isProcessing) return;
+    setIsProcessing(true);
+
     const orderItems = items.map(item => ({
       productId: item.id,
       productName: item.name,
@@ -56,37 +74,144 @@ export function Checkout({ isOpen, onClose, items, onCheckoutComplete }: Checkou
       })
     }));
 
-    try {
-      await syncedActions.addOrder({
-        customerName: formData.customerName,
-        customerEmail: formData.customerEmail,
-        customerPhone: formData.customerPhone,
-        shippingAddress: formData.shippingAddress,
-        items: orderItems,
-        totalAmount,
-        status: 'pending',
-        paymentMethod: paymentMethod === 'cod' ? 'Cash on Delivery' 
-          : paymentMethod === 'razorpay' ? 'Razorpay' 
-          : 'PhonePe',
-        paymentStatus: paymentMethod === 'cod' ? 'pending' : 'completed',
-      });
-
-      setStep('success');
-      setTimeout(() => {
-        onCheckoutComplete();
-        onClose();
-        setStep('details');
-        setFormData({
-          customerName: '',
-          customerEmail: '',
-          customerPhone: '',
-          shippingAddress: '',
+    const saveOrder = async (pStatus: 'pending' | 'completed' | 'failed') => {
+      try {
+        console.log('Saving order with status:', pStatus);
+        await syncedActions.addOrder({
+          customerName: formData.customerName,
+          customerEmail: formData.customerEmail,
+          customerPhone: formData.customerPhone,
+          shippingAddress: formData.shippingAddress,
+          items: orderItems,
+          totalAmount,
+          status: 'pending',
+          paymentMethod: paymentMethod === 'cod' ? 'Cash on Delivery' 
+            : paymentMethod === 'razorpay' ? 'Razorpay' 
+            : 'PhonePe',
+          paymentStatus: pStatus,
         });
-      }, 3000);
-    } catch (error) {
-      console.error('Order placement error:', error);
-      toast.error('Failed to place order. Please try again.');
+
+        console.log('Order saved successfully');
+        setStep('success');
+        setTimeout(() => {
+          onCheckoutComplete();
+          onClose();
+          setStep('details');
+          setFormData({
+            customerName: '',
+            customerEmail: '',
+            customerPhone: '',
+            shippingAddress: '',
+          });
+          setIsProcessing(false);
+        }, 3000);
+      } catch (error) {
+        console.error('Order placement error:', error);
+        toast.error('Failed to place order. Please try again.');
+        setIsProcessing(false);
+      }
+    };
+
+    if (paymentMethod === 'razorpay') {
+      try {
+        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-226dc7f7/payment/razorpay/create-order`, {
+            method: 'POST',
+             headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${publicAnonKey}`
+            },
+            body: JSON.stringify({ amount: totalAmount })
+        });
+        
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'Failed to create payment order');
+        }
+
+        const data = await response.json();
+        
+        const options = {
+            key: data.key_id,
+            amount: data.order.amount,
+            currency: data.order.currency,
+            name: "Radha Sarees",
+            description: "Payment for Order",
+            order_id: data.order.id,
+            handler: async function (response: any) {
+                console.log('Razorpay payment successful, verifying...', response);
+                
+                try {
+                  // Verify payment with backend
+                  const verifyResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-226dc7f7/payment/razorpay/verify`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${publicAnonKey}`
+                    },
+                    body: JSON.stringify({
+                      razorpay_order_id: response.razorpay_order_id,
+                      razorpay_payment_id: response.razorpay_payment_id,
+                      razorpay_signature: response.razorpay_signature
+                    })
+                  });
+
+                  if (!verifyResponse.ok) {
+                    const errorData = await verifyResponse.json();
+                    throw new Error(errorData.error || 'Payment verification failed');
+                  }
+
+                  const verifyResult = await verifyResponse.json();
+                  if (verifyResult.success) {
+                    toast.success('Payment verified successfully!');
+                    await saveOrder('completed');
+                  } else {
+                    throw new Error('Payment verification failed');
+                  }
+                } catch (verifyError: any) {
+                  console.error('Verification error:', verifyError);
+                  toast.error(verifyError.message || 'Payment verification failed. Please contact support.');
+                  setIsProcessing(false);
+                }
+            },
+            prefill: {
+                name: formData.customerName,
+                email: formData.customerEmail,
+                contact: formData.customerPhone
+            },
+            theme: {
+                color: "#75074f"
+            },
+            modal: {
+              ondismiss: function() {
+                console.log('Razorpay modal dismissed');
+                toast.info("Payment cancelled");
+                setIsProcessing(false);
+              }
+            }
+        };
+        
+        if (!(window as any).Razorpay) {
+          toast.error("Razorpay SDK failed to load. Please check your internet connection.");
+          setIsProcessing(false);
+          return;
+        }
+
+        const rzp1 = new (window as any).Razorpay(options);
+        rzp1.on('payment.failed', function (response: any){
+            console.error('Razorpay payment failed:', response);
+            toast.error(response.error.description);
+            setIsProcessing(false);
+        });
+        rzp1.open();
+      } catch (err: any) {
+        console.error('Razorpay initialization error:', err);
+        toast.error(err.message || "Payment initialization failed");
+        setIsProcessing(false);
+      }
+      return;
     }
+
+    await saveOrder(paymentMethod === 'cod' ? 'pending' : 'completed');
   };
 
   return (
