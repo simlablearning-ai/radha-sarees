@@ -3,7 +3,9 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import logoImage from "figma:asset/5a354ddfe06442f0910d1b354dd98b0d148f05bb.png";
+// Replaced figma:asset import with a placeholder URL for Vercel deployment compatibility
+// TODO: Replace this URL with your hosted logo image URL
+const logoImage = "https://images.unsplash.com/photo-1616606103915-dea7be788566?ixlib=rb-4.1.0&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max";
 
 interface HeaderProps {
   cartItems: number;
